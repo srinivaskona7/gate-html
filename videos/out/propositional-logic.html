@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propositional Logic · kona-srinivas-gate</title>
+<style>
+:root { --on:#fff; --bg:#070a12; --panel:#0f1420; --panel2:#151b2a; --line:rgba(255,255,255,.1); --text:#e6e9ef; --muted:#9aa4b2; --accent:#a371f7; --ok:#3fb950; --warn:#d29922; --bad:#f85149; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+button, select, input { font: inherit; color: inherit; }
+.bar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+.bar b { font-weight: 800; } .bar .t { color: var(--muted); } .bar a { margin-left: auto; color: var(--accent); text-decoration: none; font-weight: 600; }
+.layout { display: flex; gap: 14px; padding: 12px 16px; align-items: flex-start; }
+.player { flex: 1; min-width: 0; }
+.stagewrap { position: relative; width: min(100%, calc((100vh - 190px) * 16 / 9)); margin: 0 auto; aspect-ratio: 16 / 9; background: #000; border-radius: 10px; overflow: hidden; }
+.stagewrap canvas { width: 100%; height: 100%; display: block; }
+.tap { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 10px; background: rgba(5,8,14,.55); cursor: pointer; }
+.tap button { width: 96px; height: 96px; border-radius: 50%; border: 0; background: var(--accent); color: var(--on); font-size: 38px; cursor: pointer; padding-left: 8px; }
+.tap p { margin: 0; font-weight: 700; }
+.count { position: absolute; inset: 0; display: grid; place-items: center; font-size: 160px; font-weight: 800; color: #fff; background: rgba(0,0,0,.45); pointer-events: none; }
+.seekwrap { position: relative; width: min(100%, calc((100vh - 190px) * 16 / 9)); margin: 8px auto 0; }
+#seek { width: 100%; accent-color: var(--accent); margin: 0; }
+#ticks { position: absolute; left: 0; right: 0; top: -2px; height: 6px; pointer-events: none; }
+#ticks i { position: absolute; top: 0; width: 2px; height: 6px; background: rgba(255,255,255,.35); }
+.ctrl { width: min(100%, calc((100vh - 190px) * 16 / 9)); margin: 6px auto 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ctrl button, .ctrl select { height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel2); cursor: pointer; }
+.ctrl button:hover { background: #1d2538; }
+.ctrl button.on { background: var(--accent); border-color: transparent; color: var(--on); }
+.ctrl .grp { display: inline-flex; } .ctrl .grp button { border-radius: 0; } .ctrl .grp button:first-child { border-radius: 8px 0 0 8px; } .ctrl .grp button:last-child { border-radius: 0 8px 8px 0; }
+.ctrl .primary { background: var(--accent); border-color: transparent; color: var(--on); font-weight: 700; }
+#time { margin-left: auto; font-family: "SF Mono", Menlo, monospace; color: var(--muted); }
+#sceneName { width: min(100%, calc((100vh - 190px) * 16 / 9)); margin: 6px auto 0; color: var(--muted); }
+.menu { position: relative; } .menu .pop { position: absolute; bottom: 38px; left: 0; z-index: 5; display: none; flex-direction: column; min-width: 210px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 6px; }
+.menu.open .pop { display: flex; } .menu .pop button { text-align: left; border: 0; background: transparent; height: 34px; }
+.menu .pop button:hover { background: var(--panel2); }
+body.clean .bar, body.clean .ctrl, body.clean .seekwrap, body.clean #sceneName, body.clean .studio { display: none !important; }
+body.clean .stagewrap { width: min(100vw, calc(100vh * 16 / 9)); border-radius: 0; }
+body.clean .layout { padding: 0; }
+.studio { width: 400px; flex: none; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; max-height: calc(100vh - 80px); overflow: auto; }
+.studio h3 { margin: 4px 0 8px; font-size: 16px; } .studio h4 { margin: 14px 0 6px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.studio select, .studio input[type=number] { width: 100%; height: 32px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel2); padding: 0 8px; }
+.studio button { height: 30px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel2); cursor: pointer; }
+.studio button.primary { background: var(--accent); color: var(--on); border-color: transparent; font-weight: 700; }
+.studio .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 6px 0; }
+.studio label.ck { display: flex; gap: 6px; align-items: center; font-size: 13px; }
+#meter { width: 100%; height: 14px; border-radius: 7px; background: var(--panel2); display: block; }
+#prompter { font-size: 18px; line-height: 1.5; background: var(--panel2); border-radius: 10px; padding: 10px; min-height: 90px; }
+#prompter .cw { color: var(--accent); font-weight: 800; } #prompter .pw { color: var(--muted); }
+.takes { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.takes td, .takes th { padding: 4px 4px; border-bottom: 1px solid var(--line); text-align: left; }
+.takes tr.sel { background: rgba(255,255,255,.06); }
+.takes td button { height: 24px; padding: 0 6px; font-size: 12px; }
+.st-ok { color: var(--ok); } .st-warn { color: var(--warn); } .st-bad { color: var(--bad); }
+#checks div { margin: 3px 0; font-size: 13px; }
+.hint { color: var(--muted); font-size: 12.5px; margin: 4px 0; }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: grid; place-items: center; z-index: 20; }
+.modal .box { width: min(560px, 92vw); background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+.modal h3 { margin: 0 0 10px; } .modal label { display: block; margin: 6px 0; }
+.modal .opt { display: flex; gap: 8px; align-items: flex-start; padding: 8px; border-radius: 10px; border: 1px solid var(--line); margin: 6px 0; cursor: pointer; }
+.modal .opt.dis { opacity: .45; cursor: not-allowed; } .modal .opt small { display: block; color: var(--muted); }
+.modal .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+.modal select { height: 32px; border-radius: 8px; background: var(--panel2); border: 1px solid var(--line); padding: 0 8px; }
+.modal .btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.modal button { height: 36px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel2); cursor: pointer; }
+.modal button.primary { background: var(--accent); color: var(--on); border-color: transparent; font-weight: 700; }
+.modal code { background: var(--panel2); padding: 2px 6px; border-radius: 6px; font-size: 12px; word-break: break-all; }
+.recbar { position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 30; background: #111827; border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; display: flex; gap: 12px; align-items: center; }
+.recbar i { width: 10px; height: 10px; border-radius: 50%; background: var(--bad); animation: bl 1s steps(1) infinite; } @keyframes bl { 50% { opacity: 0; } }
+.recbar button { height: 30px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel2); color: var(--text); padding: 0 10px; cursor: pointer; }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #111827; border: 1px solid var(--line); padding: 10px 14px; border-radius: 10px; opacity: 0; transition: .25s; pointer-events: none; z-index: 40; max-width: 90vw; }
+.toast.show { opacity: 1; }
+@media (max-width: 1100px) { .layout { flex-direction: column; } .studio { width: 100%; max-height: none; } }
+</style>
+</head>
+<body>
+<header class="bar"><b>kona-srinivas-gate</b><span class="t" id="ttl"></span><a href="index.html">← All videos</a></header>
+<main class="layout">
+  <section class="player">
+    <div class="stagewrap" id="stagewrap">
+      <canvas id="cv" width="1920" height="1080" aria-label="Video"></canvas>
+      <div class="tap" id="tap"><button aria-label="Play">▶</button><p>Tap to play · default voice on</p></div>
+      <div class="count" id="count" hidden></div>
+    </div>
+    <div class="seekwrap"><div id="ticks"></div><input type="range" id="seek" min="0" max="10000" value="0" step="1" aria-label="Seek"></div>
+    <div class="ctrl">
+      <button id="bPlay" class="primary" title="Play/Pause (Space)">▶ Play</button>
+      <button id="bRestart" title="Restart (R)">⟲</button>
+      <span class="grp" id="speeds"><button data-s="1" class="on">1×</button><button data-s="2">2×</button><button data-s="3">3×</button><button data-s="4">4×</button></span>
+      <button id="bLoop" title="Loop (L)">🔁</button>
+      <button id="bMute" title="Mute (M)">🔊</button>
+      <button id="bCC" class="on" title="Captions (C)">CC</button>
+      <select id="voiceSel" title="Default voice"></select>
+      <button id="bStudio" title="Voice Studio">🎙 Voice Studio</button>
+      <button id="bDl" class="primary" title="Download video">⬇ Download video</button>
+      <span class="menu" id="more"><button id="bMore">⋯ More</button>
+        <span class="pop">
+          <button id="mScript">📝 Copy timed script</button>
+          <button id="mSrt">⬇ Subtitles .srt</button>
+          <button id="mCues">⬇ cues.json</button>
+          <button id="mFrame">📸 Save frame (PNG)</button>
+        </span></span>
+      <button id="bFs" title="Fullscreen (F)">⛶</button>
+      <button id="bClean" title="Clean mode (H)">Clean</button>
+      <span id="time">0:00 / 0:00</span>
+    </div>
+    <div id="sceneName"></div>
+  </section>
+
+  <aside class="studio" id="studio" hidden>
+    <h3>🎙 Voice Studio</h3>
+    <p class="hint">Record your own voice-over with any microphone, or upload audio. It is placed at each scene's exact start time, merged and used in the downloaded video. Everything stays in your browser.</p>
+    <h4>1 · Microphone</h4>
+    <div class="row"><button id="micOn" class="primary">Enable microphone</button><span class="hint" id="micMsg"></span></div>
+    <select id="micSel" disabled><option>Microphones appear after you enable access</option></select>
+    <div class="row">
+      <label class="ck"><input type="checkbox" id="cNs" checked>Noise suppression</label>
+      <label class="ck"><input type="checkbox" id="cEc" checked>Echo cancel</label>
+      <label class="ck"><input type="checkbox" id="cAgc">Auto gain</label>
+    </div>
+    <canvas id="meter" width="360" height="14"></canvas>
+    <p class="hint" id="meterMsg">Level meter</p>
+    <h4>2 · Teleprompter</h4>
+    <div id="prompter">Select a scene below. Its script appears here, and the current word is highlighted while you record.</div>
+    <h4>3 · Record</h4>
+    <div class="row"><button id="recScene" class="primary">⏺ Record selected scene</button><button id="recFull">⏺ Full take (whole video)</button><button id="recStop" disabled>■ Stop</button></div>
+    <p class="hint">A 3-2-1 countdown runs first. Scene takes stop on their own at the scene's end. Headphones keep the video sound out of your mic.</p>
+    <table class="takes"><thead><tr><th>#</th><th>Scene</th><th>Len</th><th>Take</th><th></th></tr></thead><tbody id="takeRows"></tbody></table>
+    <h4>4 · Or upload audio</h4>
+    <div class="row"><input type="file" id="upAudio" accept="audio/*"></div>
+    <div id="upMsg" class="hint"></div>
+    <h4>5 · Fit, clean &amp; merge</h4>
+    <div class="row"><label class="ck"><input type="checkbox" id="cTrim" checked>Trim silence at take starts</label><label class="ck"><input type="checkbox" id="cNorm" checked>Normalise to −1 dBFS</label></div>
+    <label class="hint">Sync nudge (ms, + = later)</label><input type="number" id="nudge" value="0" step="10" min="-1000" max="1000">
+    <div class="row"><button id="merge" class="primary">🔀 Merge voice-over</button><button id="useMine" disabled>▶ Preview with my voice</button><button id="wav" disabled>⬇ .wav</button></div>
+    <div id="checks"></div>
+  </aside>
+</main>
+
+<div class="modal" id="dlModal" hidden>
+  <div class="box">
+    <h3>⬇ Download video</h3>
+    <div id="dlOpts"></div>
+    <div class="row">
+      <label>FPS <select id="dlFps"><option>30</option><option>60</option></select></label>
+      <label>Quality <select id="dlBr"><option value="8">8 Mbps</option><option value="12" selected>12 Mbps</option><option value="16">16 Mbps</option></select></label>
+      <label><input type="checkbox" id="dlCC" checked> Burn in captions</label>
+    </div>
+    <p class="hint" id="dlInfo"></p>
+    <div class="btns"><button id="dlCancel">Cancel</button><button class="primary" id="dlGo">Start recording</button></div>
+  </div>
+</div>
+<div class="recbar" id="recbar" hidden><i></i><span id="recTxt">Recording…</span><button id="recCancel">Cancel</button></div>
+<div class="toast" id="toast" role="status"></div>
+<audio id="mine" preload="auto"></audio>
+
+<script>const DATA = {"id": "propositional-logic", "title": "Propositional Logic", "sub": "Connectives, truth tables, tautologies, equivalences and inference", "cat": "Engineering Mathematics", "accent": "#a371f7", "icon": "lightbulb", "target": 30, "keyword": "LOGIC", "tags": "#gate2027 #gatecse #discretemaths #logic", "scenes": [{"type": "hook", "title": "Propositional Logic", "kicker": "Engineering Mathematics · 30 minutes", "q": "Is \"if p then q, and if q then p\" ever always true?", "n": "Propositional logic is the cheapest marks in GATE. Every year there is at least one question on implications, equivalences, or valid arguments, and almost every one can be solved in under two minutes once you know the patterns. In the next thirty minutes, we build the whole topic from scratch: propositions, connectives, truth tables, tautologies, equivalence laws, normal forms, functional completeness, and rules of inference. Then we solve GATE style questions together. And we will answer a strange question: is \"p implies q, or q implies p\" always true?"}, {"type": "roadmap", "n": "Here is the plan. Fifty short steps in ten sections: foundations, the five connectives, truth tables, tautologies and satisfiability, equivalence laws, normal forms, functional completeness, rules of inference, translating English, and finally GATE practice with shortcuts."}, {"type": "step", "x": 1, "chip": "Analogy", "title": "Think of a row of light switches", "icon": "lightbulb", "items": [["power", "Proposition = one switch", "On is true, off is false"], ["gear", "Connective = wiring", "Combines switches into a circuit"], ["list", "Truth table = every setting", "Try all positions of all switches"], ["check", "Tautology = lamp always on", "No setting turns it off"]], "n": "Here is a picture to keep in mind. Each proposition is a light switch: on means true, off means false. Connectives are the wiring that combines switches into a circuit. A truth table tries every possible setting of every switch. And a tautology is a lamp that stays on no matter how you set the switches."}, {"sec": "Foundations", "title": "What is a proposition?", "icon": "question", "items": [["check", "\"7 is prime\"", "A proposition, and true"], ["x", "\"5 > 9\"", "A proposition, and false"], ["question", "\"x + 1 = 4\"", "Not a proposition: x is free"], ["comment", "\"Close the door\"", "Not a proposition: a command"]], "tip": "A proposition is a declarative sentence that is either true or false, never both.", "n": "Step one: what is a proposition? It is a declarative sentence that is either true or false, but not both. Seven is prime is a proposition, and it is true. Five is greater than nine is a proposition too, just a false one. But x plus one equals four is not, because x is unknown. And a command, like close the door, is not a proposition at all.", "type": "step"}, {"sec": "Foundations", "title": "Atomic and compound propositions", "icon": "layers", "items": [["box", "Atomic: p, q, r", "Cannot be split further"], ["layers", "Compound: (p ∧ q) → r", "Built with connectives"], ["hash", "Truth value: T or F", "Also written 1 and 0"]], "tip": "The truth value of a compound proposition depends only on the values of its atoms.", "n": "Step two: atomic and compound propositions. Atomic propositions, written with letters like p, q, and r, cannot be broken down. Compound propositions are built from atoms using connectives, such as p and q implies r. The key fact: the truth value of a compound proposition depends only on the truth values of its atoms. That is why truth tables work.", "type": "step"}, {"sec": "Foundations", "title": "How many rows does a truth table need?", "cmd": ["# n distinct atoms", "rows = 2^n", "# p, q        -> 4 rows", "# p, q, r     -> 8 rows", "# p, q, r, s  -> 16 rows"], "term": "counting rows", "tip": "Each atom doubles the rows. Count distinct atoms, not occurrences.", "n": "Step three: how big is a truth table? Each atom can be true or false, so every new atom doubles the number of rows. With n distinct atoms, you need two to the power n rows. Two atoms give four rows, three give eight, and four give sixteen. Count distinct atoms, not how many times a letter appears.", "type": "step"}, {"sec": "Foundations", "title": "How many Boolean functions exist?", "cmd": ["# a function assigns T or F to each of the 2^n rows", "functions = 2^(2^n)", "# n = 1  ->  4", "# n = 2  ->  16", "# n = 3  ->  256"], "term": "counting functions", "tip": "A classic GATE count: 2 to the power (2 to the power n).", "n": "Step four: how many different Boolean functions of n variables are there? A truth table has two to the n rows, and each row can independently output true or false. So there are two to the power of two to the n functions. For one variable, four. For two variables, sixteen. For three variables, two hundred fifty six. This count appears directly in GATE.", "type": "step"}, {"sec": "Foundations", "title": "Precedence of connectives", "cols": ["Order", "Connective", "Example reading"], "rows": [["1 (highest)", "¬  not", "¬p ∧ q  =  (¬p) ∧ q"], ["2", "∧  and", "p ∧ q ∨ r  =  (p ∧ q) ∨ r"], ["3", "∨  or", "p ∨ q → r  =  (p ∨ q) → r"], ["4", "→  implies", "p → q → r  =  p → (q → r)"], ["5 (lowest)", "↔  iff", "p → q ↔ r  =  (p → q) ↔ r"]], "tip": "Implication associates to the right. When in doubt, GATE adds brackets; you should too.", "n": "Step five: precedence. Negation binds tightest, then and, then or, then implies, and finally if and only if. So not p and q means not p, then and q. Implication chains associate to the right: p implies q implies r means p implies the whole of q implies r. When you write your own working, always add brackets.", "type": "compare"}, {"sec": "The five connectives", "title": "Negation, conjunction and disjunction", "firstW": 200, "cols": ["p", "q", "¬p", "p ∧ q", "p ∨ q"], "rows": [["T", "T", "F", "T", "T"], ["T", "F", "F", "F", "T"], ["F", "T", "T", "F", "T"], ["F", "F", "T", "F", "F"]], "tip": "∧ is true only when both are true. ∨ is false only when both are false.", "n": "Step six: the first three connectives. Negation flips the value. Conjunction, and, is true only when both sides are true. Disjunction, or, is false only when both sides are false. Notice that or in logic is inclusive: if both are true, p or q is still true.", "type": "compare"}, {"sec": "The five connectives", "title": "Implication: the one everyone gets wrong", "firstW": 200, "cols": ["p", "q", "p → q", "Why"], "rows": [["T", "T", "T", "Promise kept"], ["T", "F", "F", "The only broken promise"], ["F", "T", "T", "Vacuously true"], ["F", "F", "T", "Vacuously true"]], "tip": "p → q is false in exactly one row: p true, q false. So p → q ≡ ¬p ∨ q.", "n": "Step seven: implication. Think of p implies q as a promise: if it rains, I will carry an umbrella. The promise is broken in only one case: it rains and I do not carry one. If it does not rain, I have not broken anything, whatever I do. So p implies q is false only when p is true and q is false. That gives the most useful identity in this topic: p implies q equals not p or q.", "type": "compare"}, {"sec": "The five connectives", "title": "Biconditional and exclusive or", "firstW": 200, "cols": ["p", "q", "p ↔ q", "p ⊕ q"], "rows": [["T", "T", "T", "F"], ["T", "F", "F", "T"], ["F", "T", "F", "T"], ["F", "F", "T", "F"]], "tip": "p ↔ q is true when p and q match. p ⊕ q is its exact negation.", "n": "Step eight: the biconditional, p if and only if q. It is true exactly when p and q have the same value. Exclusive or is its exact negation: true when they differ. So p exclusive or q equals not of p if and only if q. The biconditional is also the conjunction of two implications, p implies q and q implies p.", "type": "compare"}, {"sec": "The five connectives", "title": "Converse, inverse and contrapositive", "cols": ["Name", "Form", "Equivalent to p → q?"], "rows": [["Implication", "p → q", "Yes, itself"], ["Contrapositive", "¬q → ¬p", "Yes, always"], ["Converse", "q → p", "No"], ["Inverse", "¬p → ¬q", "No, but ≡ converse"]], "tip": "Contrapositive ≡ original. Converse ≡ inverse. Those are the only two pairs.", "n": "Step nine: four related statements. The contrapositive, not q implies not p, is always equivalent to the original. The converse, q implies p, is not. The inverse, not p implies not q, is not equivalent either, but it is equivalent to the converse. GATE loves asking which of these say the same thing. Remember just two pairs.", "type": "compare"}, {"sec": "The five connectives", "title": "Necessary and sufficient", "items": [["arrow", "\"p only if q\"", "p → q"], ["arrow", "\"p if q\"", "q → p"], ["key", "\"q is necessary for p\"", "p → q"], ["zap", "\"p is sufficient for q\"", "p → q"], ["scale", "\"p unless q\"", "¬q → p, which is p ∨ q"]], "tip": "Whatever follows \"only if\" goes on the right of the arrow.", "n": "Step ten: English phrases for implication. p only if q means p implies q. p if q is the reverse, q implies p. q is necessary for p means p implies q, and p is sufficient for q also means p implies q. And p unless q means if not q then p, which simplifies to p or q. Rule of thumb: whatever follows only if goes on the right of the arrow.", "type": "step"}, {"sec": "Truth tables", "title": "Building a truth table systematically", "cmd": ["# (p → q) ∧ ¬q", "p q | p→q  ¬q | result", "T T |  T    F  |  F", "T F |  F    T  |  F", "F T |  T    F  |  F", "F F |  T    T  |  T"], "term": "truth table", "tip": "Fill columns left to right: atoms, then each sub-formula, then the whole.", "n": "Step eleven: building a truth table. List the atoms on the left, in binary counting order. Then add one column per sub-formula, working from the inside out. Here, p implies q, then not q, then their conjunction. The result is true in only one row: p false and q false. A neat side lesson: if p implies q and q is false, then p must be false.", "type": "step"}, {"sec": "Truth tables", "title": "The single-row shortcut", "icon": "zap", "items": [["search", "To test a tautology, hunt for a false row", "One counterexample is enough"], ["arrow", "For A → B to be false", "Force A true and B false"], ["check", "If forcing leads to a contradiction", "No false row exists: tautology"]], "tip": "You rarely need all 2^n rows. Try to make the formula false.", "n": "Step twelve: the shortcut that saves time in the exam. To check if a formula is a tautology, do not write all rows. Try to make it false. An implication is false only when its left side is true and its right side is false, so force exactly that. If the forcing leads to a contradiction, no false row exists, and the formula is a tautology.", "type": "step"}, {"sec": "Truth tables", "title": "Shortcut in action: hypothetical syllogism", "cmd": ["# ((p → q) ∧ (q → r)) → (p → r)", "# make it false: left T, right F", "p → r = F   =>  p = T, r = F", "p → q = T   =>  q = T", "q → r = T   =>  r = T   contradiction", "result: tautology"], "term": "forcing a false row", "tip": "Four lines of work instead of an eight-row table.", "n": "Step thirteen: let us use the shortcut. Is p implies q, and q implies r, implying p implies r, a tautology? To make it false, p implies r must be false, so p is true and r is false. The left side must be true, so p implies q is true, which forces q true. Then q implies r forces r true. But r is false. Contradiction. So it is a tautology, in four lines.", "type": "step"}, {"sec": "Truth tables", "title": "Counting satisfying rows", "cmd": ["# (p ∨ q) ∧ (¬p ∨ r)", "# case p = T: need r = T, q free  -> 2 rows", "# case p = F: need q = T, r free  -> 2 rows", "satisfying rows = 4 of 8"], "term": "case split", "tip": "Split on one variable. Each branch is usually simple to count.", "n": "Step fourteen: counting how many rows make a formula true. Take p or q, and not p or r. Split on p. If p is true, the first clause holds, and the second needs r true. q is free, so two rows. If p is false, the second clause holds, and the first needs q true. r is free, so two more rows. Four of eight rows satisfy it.", "type": "step"}, {"sec": "Truth tables", "title": "A cycle of implications", "cmd": ["# (p → q) ∧ (q → r) ∧ (r → p)", "# any T forces the next one T, around the cycle", "all T  -> true", "all F  -> true", "anything mixed -> false", "satisfying rows = 2"], "term": "cycle", "tip": "A cycle of implications forces all variables to be equal.", "n": "Step fifteen: a pattern worth remembering. p implies q, q implies r, and r implies p. If any variable is true, it forces the next one true, all around the cycle. So either all three are true, or all three are false. Exactly two rows satisfy it. In other words, a cycle of implications says all the variables are equivalent.", "type": "step"}, {"sec": "Tautology & SAT", "title": "Four classes of formulas", "cols": ["Class", "Meaning", "Example"], "rows": [["Tautology (valid)", "True in every row", "p ∨ ¬p"], ["Contradiction", "False in every row", "p ∧ ¬p"], ["Contingency", "Some T, some F", "p → q"], ["Satisfiable", "True in at least one row", "Any non-contradiction"]], "tip": "Every tautology is satisfiable. A contingency is satisfiable but not valid.", "n": "Step sixteen: classifying formulas. A tautology, also called valid, is true in every row, like p or not p. A contradiction is false in every row, like p and not p. A contingency is sometimes true and sometimes false. And satisfiable means true in at least one row, so tautologies and contingencies are both satisfiable.", "type": "compare"}, {"sec": "Tautology & SAT", "title": "Validity and satisfiability are duals", "items": [["check", "F is valid", "iff ¬F is unsatisfiable"], ["x", "F is unsatisfiable", "iff ¬F is valid"], ["question", "F is satisfiable", "iff ¬F is not valid"]], "tip": "GATE options often swap these. Negate and re-check.", "n": "Step seventeen: validity and satisfiability are two sides of one coin. A formula is valid exactly when its negation is unsatisfiable. A formula is unsatisfiable exactly when its negation is valid. And a formula is satisfiable exactly when its negation is not valid. Many GATE options are built by swapping these words, so negate and check.", "type": "step"}, {"sec": "Tautology & SAT", "title": "Is (p → q) ∨ (q → p) a tautology?", "cmd": ["# make it false: both disjuncts F", "p → q = F   =>  p = T, q = F", "q → p = F   =>  q = T, p = F", "p cannot be both T and F", "result: tautology"], "term": "the hook question", "tip": "Surprising but true: of any two propositions, one implies the other.", "n": "Step eighteen: our opening question. Is p implies q, or q implies p, a tautology? To make it false, both parts must be false. The first false means p true and q false. The second false means q true and p false. Those cannot both hold. So yes, it is a tautology. For any two propositions, at least one implies the other. That surprises most students.", "type": "step"}, {"sec": "Tautology & SAT", "title": "Spot the tautology", "cmd": ["(a) (p → q) → (q → p)        not valid", "(b) (p ∧ (p → q)) → q        VALID  (modus ponens)", "(c) (p ∨ q) → (p ∧ q)        not valid", "(d) ((p → q) ∧ ¬p) → ¬q      not valid", "# (d) is the inverse error"], "term": "exam-style options", "tip": "(d) is \"denying the antecedent\", a classic trap.", "n": "Step nineteen: a typical four-option question. Option a, if p implies q then q implies p, is not valid: that is the converse. Option b, p and p implies q, implies q, is valid: it is modus ponens. Option c fails when only one is true. And option d, p implies q and not p, therefore not q, is not valid. That fallacy is called denying the antecedent.", "type": "step"}, {"sec": "Tautology & SAT", "title": "Logical implication versus the arrow", "items": [["arrow", "p → q", "A formula; may be T or F"], ["check", "p ⟹ q", "A claim: p → q is a tautology"], ["scale", "p ≡ q", "A claim: p ↔ q is a tautology"]], "tip": "Equivalence means the biconditional is valid, not merely true in one row.", "n": "Step twenty: two symbols that look alike. The arrow, p implies q, is a formula inside the language. It can be true or false in a given row. But when we say p logically implies q, we mean p implies q is a tautology. Likewise, p is equivalent to q means p if and only if q is a tautology, true in every row.", "type": "step"}, {"sec": "Equivalence laws", "title": "The core laws", "cols": ["Law", "Form"], "rows": [["Identity", "p ∧ T ≡ p,   p ∨ F ≡ p"], ["Domination", "p ∨ T ≡ T,   p ∧ F ≡ F"], ["Idempotent", "p ∨ p ≡ p,   p ∧ p ≡ p"], ["Double negation", "¬¬p ≡ p"], ["Complement", "p ∨ ¬p ≡ T,   p ∧ ¬p ≡ F"], ["Commutative", "p ∨ q ≡ q ∨ p"]], "tip": "These mirror Boolean algebra exactly: ∧ is ·, ∨ is +.", "n": "Step twenty one: the core equivalence laws. Identity: and with true, or with false, changes nothing. Domination: or with true gives true, and with false gives false. Idempotent: p or p is just p. Double negation cancels. Complement: p or not p is true, p and not p is false. These are the same laws you will use in Boolean algebra for digital logic.", "type": "compare"}, {"sec": "Equivalence laws", "title": "De Morgan, distributive and absorption", "cols": ["Law", "Form"], "rows": [["De Morgan", "¬(p ∧ q) ≡ ¬p ∨ ¬q"], ["De Morgan", "¬(p ∨ q) ≡ ¬p ∧ ¬q"], ["Distributive", "p ∧ (q ∨ r) ≡ (p ∧ q) ∨ (p ∧ r)"], ["Distributive", "p ∨ (q ∧ r) ≡ (p ∨ q) ∧ (p ∨ r)"], ["Absorption", "p ∨ (p ∧ q) ≡ p,   p ∧ (p ∨ q) ≡ p"]], "tip": "Unlike arithmetic, ∨ also distributes over ∧.", "n": "Step twenty two: three more laws. De Morgan: to negate an and, negate both parts and switch to or, and the reverse. Distributive: and distributes over or, just like multiplication over addition, but in logic, or also distributes over and. And absorption: p or p and q is just p. Absorption simplifies many GATE expressions in one line.", "type": "compare"}, {"sec": "Equivalence laws", "title": "Implication laws", "cols": ["Left side", "Right side"], "rows": [["Definition", "p → q", "¬p ∨ q"], ["Negation", "¬(p → q)", "p ∧ ¬q"], ["Exportation", "(p ∧ q) → r", "p → (q → r)"], ["Proof by cases", "(p → r) ∧ (q → r)", "(p ∨ q) → r"], ["Same premise", "(p → q) ∧ (p → r)", "p → (q ∧ r)"], ["Or of arrows", "(p → r) ∨ (q → r)", "(p ∧ q) → r"]], "tip": "Implication is NOT associative: (p → q) → r is not p → (q → r).", "n": "Step twenty three: implication laws. Material implication: p implies q equals not p or q. Its negation is p and not q. Exportation: p and q implies r equals p implies, q implies r. Two implications with the same conclusion combine into an or on the left. Two with the same premise combine into an and on the right. And watch the last one: an or of implications gives an and on the left. Also, implication is not associative.", "type": "compare"}, {"sec": "Equivalence laws", "title": "Simplify step by step", "cmd": ["  ¬(p ∨ (¬p ∧ q))", "≡ ¬p ∧ ¬(¬p ∧ q)        De Morgan", "≡ ¬p ∧ (p ∨ ¬q)         De Morgan, double negation", "≡ (¬p ∧ p) ∨ (¬p ∧ ¬q)  distributive", "≡ F ∨ (¬p ∧ ¬q)         complement", "≡ ¬p ∧ ¬q               identity"], "term": "simplification", "tip": "Name the law at every line. It catches your own mistakes.", "n": "Step twenty four: simplify not of p or, not p and q. Push the negation inward with De Morgan: not p and not of not p and q. De Morgan again, with double negation: not p and, p or not q. Distribute. Not p and p is false, and false or anything is that thing. The answer is not p and not q. Name the law at each line; it catches mistakes.", "type": "step"}, {"sec": "Equivalence laws", "title": "Duality", "items": [["refresh", "Swap ∧ with ∨", "and swap T with F"], ["check", "If A ≡ B is a law", "then dual(A) ≡ dual(B) is a law"], ["warn", "Only for ∧, ∨, ¬", "Rewrite → and ↔ first"]], "tip": "Every law in the table comes in a dual pair. Learn one, get one free.", "n": "Step twenty five: duality. The dual of a formula swaps and with or, and true with false. If two formulas are equivalent, their duals are equivalent too. That is why every law came in pairs. Duality only applies to formulas written with and, or, and not, so rewrite implications first.", "type": "step"}, {"sec": "Normal forms", "title": "Literals, clauses and terms", "items": [["tag", "Literal", "p or ¬p"], ["list", "Clause", "An OR of literals: p ∨ ¬q ∨ r"], ["layers", "Term", "An AND of literals: p ∧ ¬q"], ["box", "CNF", "AND of clauses"], ["box", "DNF", "OR of terms"]], "tip": "CNF is the format SAT solvers use. DNF reads straight off a truth table.", "n": "Step twenty six: normal forms. A literal is a variable or its negation. A clause is an or of literals. A term is an and of literals. Conjunctive normal form is an and of clauses. Disjunctive normal form is an or of terms. Every formula can be rewritten in both forms.", "type": "step"}, {"sec": "Normal forms", "title": "DNF straight from the truth table", "cmd": ["# f = p → q", "p q | f", "F F | T   ->  ¬p ∧ ¬q", "F T | T   ->  ¬p ∧ q", "T T | T   ->  p ∧ q", "DNF: (¬p∧¬q) ∨ (¬p∧q) ∨ (p∧q)", "minterms: Σ(0, 1, 3)"], "term": "sum of minterms", "tip": "One term per TRUE row. Write a variable plainly if it is T, negated if F.", "n": "Step twenty seven: getting DNF from a truth table. For each row where the function is true, write a term that is true only in that row. Variables that are true appear plainly, false ones are negated. Then or the terms together. For p implies q, that is three terms, or minterms zero, one, and three. This is the canonical sum of products.", "type": "step"}, {"sec": "Normal forms", "title": "CNF straight from the truth table", "cmd": ["# f = p → q has one FALSE row: p = T, q = F", "# a clause that is false only in that row:", "clause: ¬p ∨ q", "CNF: (¬p ∨ q)", "maxterms: Π(2)"], "term": "product of maxterms", "tip": "One clause per FALSE row, with every literal flipped.", "n": "Step twenty eight: CNF from the table. Now look at false rows. For each one, write a clause that is false only in that row, by flipping every literal. p implies q has a single false row, p true and q false, so the clause is not p or q. That is the whole CNF, product of maxterm two. Choose the form with fewer rows to write.", "type": "step"}, {"sec": "Normal forms", "title": "Converting by laws", "nodes": [["arrow", "Remove → and ↔", "p → q ≡ ¬p ∨ q"], ["filter", "Push ¬ inward", "De Morgan, ¬¬"], ["layers", "Distribute", "∨ over ∧ for CNF"], ["check", "Simplify", "Absorb and drop T"]], "edges": ["then", "then", "then"], "tip": "p ↔ q ≡ (¬p ∨ q) ∧ (p ∨ ¬q) in CNF.", "n": "Step twenty nine: converting without a table. First remove implications and biconditionals. Then push negations inward using De Morgan and double negation. Then distribute: or over and to reach CNF, or and over or to reach DNF. Finally simplify. For example, p if and only if q becomes not p or q, and p or not q.", "type": "flow"}, {"sec": "Normal forms", "title": "Self-dual functions", "cmd": ["# f is self-dual if  f(¬x1..¬xn) = ¬f(x1..xn)", "# rows pair up with their complements", "free choices = 2^(n-1) pairs", "self-dual functions = 2^(2^(n-1))", "# n = 3  ->  16"], "term": "counting", "tip": "Choosing a value for one row fixes its complementary row.", "n": "Step thirty: a counting question that GATE has asked. A function is self dual if flipping every input flips the output. Rows come in complementary pairs, and choosing the output on one row fixes its partner. There are two to the n minus one pairs, so there are two to the power two to the n minus one self dual functions. For three variables, sixteen. We verified this by brute force over all two hundred fifty six functions.", "type": "step"}, {"sec": "Completeness", "title": "What does \"complete\" mean?", "icon": "wrench", "items": [["wrench", "A set of connectives is complete", "if it can express every Boolean function"], ["check", "{¬, ∧, ∨}", "Complete: that is DNF"], ["check", "{¬, ∧} and {¬, ∨}", "Complete, by De Morgan"], ["check", "{¬, →}", "Complete: p ∨ q ≡ ¬p → q"]], "tip": "To prove a set complete, build ¬ and either ∧ or ∨ from it.", "n": "Step thirty one: functional completeness. A set of connectives is complete if it can express every Boolean function. Not, and, or is complete, because every function has a DNF. Not with and is complete, since De Morgan rebuilds or. Not with implies is complete, because p or q is not p implies q. To prove a set is complete, build not, and one of and or or.", "type": "step"}, {"sec": "Completeness", "title": "NAND and NOR are complete alone", "cmd": ["¬p      ≡  p ↑ p", "p ∧ q   ≡  (p ↑ q) ↑ (p ↑ q)", "p ∨ q   ≡  (p ↑ p) ↑ (q ↑ q)", "# NOR (↓) works the same way", "¬p      ≡  p ↓ p"], "term": "universal gates", "tip": "That is why chips can be built from NAND gates only.", "n": "Step thirty two: NAND and NOR. Each alone is complete. Not p is p NAND p. And is NAND followed by another NAND to negate it. Or is the NAND of the two negations. NOR works the same way. That is why they are called universal gates, and why whole chips can be built from NAND gates alone.", "type": "step"}, {"sec": "Completeness", "title": "Why {∧, ∨, →, ↔} is NOT complete", "icon": "warn", "items": [["check", "Each is true when all inputs are true", "T ∧ T, T ∨ T, T → T, T ↔ T are all T"], ["lock", "So every formula built from them", "is true when all atoms are true"], ["x", "Then ¬p cannot be built", "It is false when p is true"]], "tip": "Truth-preserving sets can never express negation.", "n": "Step thirty three: proving a set is not complete. And, or, implies, and if and only if all output true when every input is true. So any formula built only from them is true when every atom is true. But not p is false when p is true. So negation cannot be built, and the set is not complete. Implication alone is not complete, for the same reason.", "type": "step"}, {"sec": "Completeness", "title": "Implication plus false is complete", "cmd": ["¬p      ≡  p → F", "p ∨ q   ≡  (p → F) → q", "p ∧ q   ≡  (p → (q → F)) → F", "# so {→, F} is complete"], "term": "rescuing →", "tip": "Adding the constant F breaks truth preservation.", "n": "Step thirty four: but add the constant false, and implication becomes complete. Not p is p implies false. Or is not p implies q. And comes from De Morgan. The constant false breaks the truth preserving property, which was the only obstacle.", "type": "step"}, {"sec": "Completeness", "title": "Completeness checklist", "cols": ["Set", "Complete?", "Reason"], "rows": [["{↑} or {↓}", "Yes", "Builds ¬ and ∧"], ["{¬, →}", "Yes", "p ∨ q ≡ ¬p → q"], ["{→, F}", "Yes", "¬p ≡ p → F"], ["{∧, ∨}", "No", "Truth-preserving"], ["{→}", "No", "Truth-preserving"], ["{⊕, ↔}", "No", "Only linear functions"]], "tip": "Post's theorem names five properties. GATE usually only needs truth preservation.", "n": "Step thirty five: a quick checklist. NAND or NOR alone: complete. Not with implies: complete. Implies with false: complete. And with or, without not: not complete. Implication alone: not complete. And exclusive or with if and only if only build linear functions, so not complete. The full theory is Post's theorem, but truth preservation answers most GATE questions.", "type": "compare"}, {"sec": "Rules of inference", "title": "Arguments and validity", "icon": "scale", "items": [["list", "Premises P1, P2, ... Pn", "What we are given"], ["arrow", "Conclusion C", "What we claim follows"], ["check", "Valid", "iff (P1 ∧ ... ∧ Pn) → C is a tautology"]], "tip": "Validity is about form, not about whether the premises are true.", "n": "Step thirty six: arguments. An argument has premises and a conclusion. It is valid if the conclusion is true in every row where all the premises are true. Equivalently, premises anded together, implying the conclusion, is a tautology. Validity is about the form of the argument, not about whether the premises are actually true.", "type": "step"}, {"sec": "Rules of inference", "title": "The rules you must know", "cols": ["Rule", "From", "Conclude"], "rows": [["Modus ponens", "p,  p → q", "q"], ["Modus tollens", "¬q,  p → q", "¬p"], ["Hypothetical syllogism", "p → q,  q → r", "p → r"], ["Disjunctive syllogism", "p ∨ q,  ¬p", "q"], ["Resolution", "p ∨ q,  ¬p ∨ r", "q ∨ r"], ["Addition / Simplification", "p  /  p ∧ q", "p ∨ q  /  p"]], "tip": "Resolution is the rule behind SAT solvers and Prolog.", "n": "Step thirty seven: the rules of inference. Modus ponens: from p and p implies q, conclude q. Modus tollens: from not q and p implies q, conclude not p. Hypothetical syllogism chains implications. Disjunctive syllogism: p or q, and not p, gives q. Resolution: p or q and not p or r gives q or r. And addition and simplification are the easy ones.", "type": "compare"}, {"sec": "Rules of inference", "title": "Two fallacies GATE uses as traps", "cols": ["Fallacy", "Form", "Counterexample"], "rows": [["Converse error", "p → q,  q  ⊢  p", "p = F, q = T"], ["Inverse error", "p → q,  ¬p  ⊢  ¬q", "p = F, q = T"]], "tip": "Both fail in the same row: p false, q true.", "n": "Step thirty eight: two fallacies. The converse error, also called affirming the consequent: p implies q, and q is true, so p must be true. Wrong. The inverse error, also called denying the antecedent: p implies q, and p is false, so q is false. Also wrong. Both fail in the same row: p false and q true. When an option looks like one of these, it is almost always the incorrect one.", "type": "compare"}, {"sec": "Rules of inference", "title": "Proving an argument valid", "cmd": ["# premises: p → q,  ¬q → r,  ¬r", "1. ¬r              premise", "2. ¬q → r          premise", "3. q               modus tollens (1, 2)", "# conclusion q follows. Does p? ~p?", "p : not entailed   ~p : not entailed"], "term": "derivation", "tip": "We also checked by brute force: only q is forced.", "n": "Step thirty nine: a derivation. Premises: p implies q, not q implies r, and not r. From not r and not q implies r, modus tollens gives not not q, which is q. So q follows. But what about p? With q true, p implies q is satisfied whatever p is, so neither p nor not p follows. A brute force check over all eight rows confirms this.", "type": "step"}, {"sec": "Rules of inference", "title": "Proof by contradiction and resolution", "nodes": [["list", "Premises", "put in CNF"], ["x", "Add ¬C", "negated conclusion"], ["refresh", "Resolve", "pairs of clauses"], ["check", "Empty clause", "means valid"]], "edges": ["plus", "repeat", "reach"], "tip": "Deriving the empty clause shows premises ∧ ¬C is unsatisfiable.", "n": "Step forty: a mechanical method. Convert the premises into clauses, add the negation of the conclusion, and keep resolving pairs of clauses. If you ever derive the empty clause, the premises together with the negated conclusion are unsatisfiable. So the conclusion follows. This is exactly how SAT solvers and Prolog work.", "type": "flow"}, {"sec": "Translating English", "title": "From sentences to symbols", "cols": ["English"], "rows": [["r ∧ c", "It rains and it is cold"], ["r → m", "If it rains, the match is cancelled"], ["¬m → ¬r", "The match is held only if it does not rain"], ["¬r ∧ ¬c", "Neither rain nor cold"], ["r → m", "Rain is sufficient for cancellation"]], "tip": "Neither p nor q is ¬p ∧ ¬q, not ¬p ∨ ¬q.", "n": "Step forty one: translation. It rains and it is cold: r and c. If it rains, the match is cancelled: r implies m. The match is held only if it does not rain: held implies no rain, which is not m implies not r, the contrapositive of the previous one. Neither rain nor cold means not r and not c. Watch that one: it is an and, not an or.", "type": "compare"}, {"sec": "Translating English", "title": "But, unless, either", "items": [["link", "\"p but q\"", "p ∧ q"], ["scale", "\"p unless q\"", "p ∨ q"], ["x", "\"Either p or q, not both\"", "p ⊕ q"], ["arrow", "\"q whenever p\"", "p → q"]], "tip": "But is just and. English adds contrast; logic does not care.", "n": "Step forty two: tricky words. But is simply and; the sense of contrast is lost in logic. Unless is or. Either p or q, but not both, is exclusive or. And q whenever p means p implies q. GATE translation questions are mostly about these few words.", "type": "step"}, {"sec": "Translating English", "title": "Knights and knaves", "cmd": ["# knights always tell the truth, knaves always lie", "# A says: \"B is a knave\"", "# B says: \"A and I are the same type\"", "A ↔ ¬B,   B ↔ (A ↔ B)", "check 4 rows ...", "only solution: A knight, B knave"], "term": "puzzle", "tip": "A person's statement is true exactly when that person is a knight.", "n": "Step forty three: a puzzle. Knights always tell the truth and knaves always lie. A says B is a knave. B says A and I are the same type. Encode each person as a proposition: true means knight. Then A if and only if not B, and B if and only if A equals B. Checking four rows, the only solution is A is a knight and B is a knave.", "type": "step"}, {"sec": "Translating English", "title": "Logic in code", "cmd": ["$ python3", ">>> p, q = True, False", ">>> (not p) or q          # p -> q", "False", ">>> p != q               # p XOR q", "True"], "term": "python3", "tip": "Python has no → operator. Use (not p) or q.", "n": "Step forty four: a quick check you can do on a computer. Python has no implication operator, so write not p or q. Exclusive or on Booleans is simply not equal. With p true and q false, the implication is false and the exclusive or is true, exactly as in our tables. You can loop over itertools product to brute force any truth table.", "type": "step"}, {"sec": "GATE practice", "title": "Practice: which are equivalent to p → q?", "cmd": ["(i)   ¬p ∨ q        yes", "(ii)  ¬q → ¬p       yes  (contrapositive)", "(iii) q → p         no   (converse)", "(iv)  ¬(p ∧ ¬q)     yes  (De Morgan of i)", "answer: (i), (ii), (iv)"], "term": "practice 1", "tip": "Reduce every option to ¬p ∨ q form and compare.", "n": "Step forty five: practice. Which options equal p implies q? Option one, not p or q: yes, by definition. Option two, the contrapositive: yes. Option three, the converse: no. Option four, not of p and not q: by De Morgan, that is not p or q, so yes. The trick is to rewrite every option in the form not p or q.", "type": "step"}, {"sec": "GATE practice", "title": "Practice: count the true rows", "cmd": ["# f = (p → q) ∧ (q → r)", "# split on q", "q = T: need r = T, p free     -> 2", "q = F: need p = F, r free     -> 2", "answer: 4 of 8"], "term": "practice 2", "tip": "Split on the variable shared by the most clauses.", "n": "Step forty six: how many rows make p implies q, and q implies r, true? Split on q, which appears in both parts. If q is true, the first part holds, and the second needs r true, with p free: two rows. If q is false, the second part holds, and the first needs p false, with r free: two rows. Four in total.", "type": "step"}, {"sec": "GATE practice", "title": "Practice: is the argument valid?", "cmd": ["# If the program compiles, it has no syntax error.", "# The program has a syntax error.", "# Therefore it does not compile.", "c → ¬s,   s   ⊢   ¬c", "modus tollens: valid"], "term": "practice 3", "tip": "Translate first, then match the shape to a rule.", "n": "Step forty seven: if the program compiles, it has no syntax error. It has a syntax error. Therefore it does not compile. Translate: c implies not s, and s. We want not c. Since s is true, not s is false, and modus tollens gives not c. Valid. Translate first, then match the shape to a rule.", "type": "step"}, {"sec": "GATE practice", "title": "Five-second shortcuts", "items": [["zap", "p → q is false in one row only", "T → F"], ["zap", "A → (B → A) is always valid", "Weakening"], ["zap", "Validity of A → B", "Force A = T, B = F, hunt for contradiction"], ["zap", "Functions of n variables", "2^(2^n)"], ["zap", "Implication chain cycle", "Means all variables are equal"]], "tip": "Each of these has saved two minutes in a real GATE paper.", "n": "Step forty eight: shortcuts. Implication is false in only one row. A implies, B implies A, is always valid. To test any implication, force its left true and right false, and look for a contradiction. There are two to the two to the n functions of n variables. And a cycle of implications means all variables are equal.", "type": "step"}, {"sec": "GATE practice", "title": "Exam strategy for logic questions", "cols": ["Question type", "Fastest method"], "rows": [["Tautology?", "Force a false row"], ["Equivalent?", "Reduce both to CNF or ¬p ∨ q form"], ["Count true rows", "Case split on a shared variable"], ["Valid argument?", "Match a rule, or test the fallacy row"], ["Complete set?", "Build ¬ and ∧, or check truth preservation"]], "tip": "Logic questions are usually 1-mark. Aim for under two minutes each.", "n": "Step forty nine: exam strategy. For a tautology question, force a false row. For equivalence, reduce both sides to a standard form. For counting, case split on a shared variable. For validity, match a rule, or test the row where a fallacy fails. For completeness, build negation and and, or check truth preservation.", "type": "compare"}, {"sec": "GATE practice", "title": "Where this leads next", "nodes": [["lightbulb", "Propositional logic", "this video"], ["users", "First-order logic", "quantifiers ∀ ∃"], ["cpu", "Boolean algebra", "digital logic"], ["code", "SAT and compilers", "CNF, resolution"]], "edges": ["adds", "mirrors", "powers"], "tip": "Next video: first-order logic, where quantifiers make negation subtle.", "n": "Step fifty: where this leads. First order logic adds quantifiers, for all and there exists, on top of everything here. Boolean algebra in digital logic uses the very same laws with different symbols. And CNF with resolution powers SAT solvers and logic programming. The next video in this series covers first order logic.", "type": "flow"}, {"type": "mistakes", "rows": [["Treating p → q as equivalent to q → p", "Only the contrapositive ¬q → ¬p is equivalent"], ["Translating \"p only if q\" as q → p", "\"Only if\" points right: p → q"], ["Writing \"neither p nor q\" as ¬p ∨ ¬q", "It is ¬p ∧ ¬q"], ["Assuming → is associative", "(p → q) → r differs from p → (q → r)"]], "n": "Four common mistakes. Treating p implies q as the same as its converse: only the contrapositive is equivalent. Translating p only if q as q implies p: only if points to the right. Writing neither p nor q with an or: it is an and. And assuming implication is associative: it is not, so keep the brackets."}, {"type": "repos", "chip": "Practice", "title": "Practise with these", "repos": [["GATE CSE previous papers", "Mathematical Logic questions, 1990 to 2026", "", "book"], ["gateoverflow.in", "Solved and discussed GATE logic questions", "", "comment"], ["NPTEL: Discrete Mathematics", "IIT lecture series on logic and proofs", "", "play"], ["Rosen, Discrete Mathematics", "Chapter 1 exercises on logic and proofs", "", "bookmark"], ["Python itertools.product", "Brute-force any truth table to check answers", "", "code"], ["../interactive/m1-discrete.html", "Your interactive discrete maths module", "", "lightbulb"]], "n": "Here is where to practise. GATE previous papers, especially the mathematical logic questions. GATE Overflow, for discussed solutions. The NPTEL discrete mathematics course. Chapter one of Rosen. Python itertools, to check your answers by brute force. And your interactive discrete maths module in this repository. Screenshot this frame."}, {"type": "recap", "points": ["A truth table has 2^n rows; there are 2^(2^n) Boolean functions", "p → q ≡ ¬p ∨ q, false only when p is T and q is F", "Contrapositive ≡ original; converse ≡ inverse", "Test validity by forcing a false row", "NAND, NOR, {¬, →} and {→, F} are complete; {∧, ∨, →, ↔} is not"], "n": "Let us recap. A truth table has two to the n rows, and there are two to the two to the n Boolean functions. p implies q equals not p or q, false only when p is true and q is false. The contrapositive is equivalent to the original, and the converse to the inverse. Test validity by forcing a false row. And NAND, NOR, not with implies, and implies with false are complete. Follow for more, and comment LOGIC if this helped."}]};</script>
+<script>
+(() => {
+'use strict';
+/* =================== constants & theme =================== */
+const W = 1920, H = 1080, D = DATA;
+const TH = { bg: '#0b0f17', surface: '#141a26', surface2: '#1a2131', line: '#273043', text: '#e6e9ef', muted: '#9aa4b2', accent: D.accent || '#4f8cff', ok: '#3fb950', warn: '#d29922', bad: '#f85149', term: '#0a0e14' };
+const SANS = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+const MONO = '"SF Mono", Menlo, Consolas, "Liberation Mono", monospace';
+const WPS = 2.15, PAD = 1.4, LEAD = 0.35;
+const $ = id => document.getElementById(id);
+{ const n = parseInt(TH.accent.slice(1), 16), c = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  const lum = 0.2126 * c(n >> 16 & 255) + 0.7152 * c(n >> 8 & 255) + 0.0722 * c(n & 255);
+  document.documentElement.style.setProperty('--on', lum > 0.32 ? '#0b0f17' : '#ffffff'); }
+const cv = $('cv'), ctx = cv.getContext('2d');
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const ease = x => 1 - Math.pow(1 - clamp(x), 3);
+const fmt = s => { s = Math.max(0, s); const m = Math.floor(s / 60), r = Math.floor(s % 60); return m + ':' + String(r).padStart(2, '0'); };
+const fmtTC = s => { const m = Math.floor(s / 60), r = s - m * 60; return String(m).padStart(2, '0') + ':' + r.toFixed(1).padStart(4, '0'); };
+function hexA(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; }
+
+/* =================== icons (24x24 stroke paths) =================== */
+const IC = {
+  check: 'M20 6 9 17l-5-5', x: 'M18 6 6 18M6 6l12 12', arrow: 'M5 12h14M13 6l6 6-6 6',
+  power: 'M12 2v10M18.36 6.64a9 9 0 1 1-12.73 0', cpu: 'M5 5h14v14H5zM9 9h6v6H9zM9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3',
+  server: 'M3 4h18v6H3zM3 14h18v6H3zM7 7h.01M7 17h.01', database: 'M4 5c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',
+  cloud: 'M18 10h-1.3A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z', box: 'M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8',
+  container: 'M3 7h18v13H3zM7 7v13M11 7v13M15 7v13M3 4h18', layers: 'm12 2 10 5-10 5L2 7zM2 12l10 5 10-5M2 17l10 5 10-5',
+  terminal: 'M2 4h20v16H2zM6 9l3 3-3 3M12 15h6', file: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6',
+  folder: 'M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+  gear: 'M12 9a3 3 0 1 0 0 6 3 3 0 1 0 0-6M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1M12 5a7 7 0 1 0 0 14 7 7 0 1 0 0-14',
+  lock: 'M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4', key: 'M21 2l-2 2M11.4 11.6a5.5 5.5 0 1 1-7.8 7.8 5.5 5.5 0 0 1 7.8-7.8zM15.5 7.5l3 3L22 7l-3-3M11.4 11.6 19 4',
+  shield: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z', user: 'M12 4a4 4 0 1 0 0 8 4 4 0 1 0 0-8M4 21a8 8 0 0 1 16 0',
+  users: 'M9 4a4 4 0 1 0 0 8 4 4 0 1 0 0-8M1 21a8 8 0 0 1 16 0M17 4a4 4 0 0 1 0 8M23 21a8 8 0 0 0-5-7.4',
+  globe: 'M12 2a10 10 0 1 0 0 20 10 10 0 1 0 0-20M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20',
+  clock: 'M12 2a10 10 0 1 0 0 20 10 10 0 1 0 0-20M12 6v6l4 2', search: 'M11 4a7 7 0 1 0 0 14 7 7 0 1 0 0-14M21 21l-4.3-4.3',
+  chart: 'M3 3v18h18M7 15l4-4 3 3 6-6', bars: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+  warn: 'M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01',
+  bug: 'M8 6a4 4 0 0 1 8 0M6 9h12v6a6 6 0 0 1-12 0zM12 9v12M2 13h4M18 13h4M3 7l3 2M21 7l-3 2M3 19l3-2M21 19l-3-2',
+  git: 'M6 3v12M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 9a9 9 0 0 1-9 9',
+  refresh: 'M23 4v6h-6M1 20v-6h6M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15',
+  scale: 'M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7', route: 'M12 2v20M5 6h12l3 3-3 3H5zM19 14H7l-3 3 3 3h12',
+  link: 'M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7',
+  heart: 'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z',
+  play: 'M6 4l14 8-14 8z', code: 'M16 18l6-6-6-6M8 6l-6 6 6 6', list: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
+  eye: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 1 0 0-6',
+  bell: 'M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0',
+  rocket: 'M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2.1-.1-2.9a2.2 2.2 0 0 0-2.9-.1zM12 15l-3-3a22 22 0 0 1 2-3.9A12.9 12.9 0 0 1 22 2c0 2.7-.8 7.5-6 11a22 22 0 0 1-4 2zM9 12H4s.6-3 2-4c1.6-1.1 5 0 5 0M12 15v5s3-.6 4-2c1.1-1.6 0-5 0-5',
+  wheel: 'M12 3a9 9 0 1 0 0 18 9 9 0 1 0 0-18M12 9a3 3 0 1 0 0 6 3 3 0 1 0 0-6M12 3v6M12 15v6M3 12h6M15 12h6M5.6 5.6l4.3 4.3M14.1 14.1l4.3 4.3M5.6 18.4l4.3-4.3M14.1 9.9l4.3-4.3',
+  ship: 'M2 20c2 1 4 1 6 0s4-1 6 0 4 1 6 0M4 17l-1-5h18l-1 5M6 12V7h12v5M12 3v4',
+  wrench: 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z',
+  dollar: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6', zap: 'M13 2 3 14h9l-1 8 10-12h-9z',
+  pipeline: 'M2 9h5v6H2zM9.5 9h5v6h-5zM17 9h5v6h-5zM7 12h2.5M14.5 12H17', star: 'M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z',
+  trash: 'M3 6h18M8 6V4h8v2M5 6l1 15h12l1-15', download: 'M12 3v12M7 10l5 5 5-5M4 17v3h16v-3', upload: 'M12 21V9M7 14l5-5 5 5M4 7V4h16v3',
+  filter: 'M22 3H2l8 9.5V19l4 2v-8.5z', hash: 'M4 9h16M4 15h16M10 3 8 21M16 3l-2 18', gauge: 'M12 14l4-4M3.3 19a10 10 0 1 1 17.4 0z',
+  dash: 'M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z', mesh: 'M18 2a3 3 0 1 0 0 6 3 3 0 1 0 0-6M6 9a3 3 0 1 0 0 6 3 3 0 1 0 0-6M18 16a3 3 0 1 0 0 6 3 3 0 1 0 0-6M8.6 13.5l6.8 4M15.4 6.5l-6.8 4',
+  inbox: 'M22 12h-6l-2 3h-4l-2-3H2M5.5 5h13L22 12v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6z', tag: 'M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8zM7 7h.01',
+  map: 'M1 6v16l7-4 8 4 7-4V2l-7 4-8-4zM8 2v16M16 6v16', monitor: 'M2 3h20v14H2zM8 21h8M12 17v4',
+  disk: 'M22 12H2M5.5 5h13L22 12v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6zM6 16h.01M10 16h.01', comment: 'M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12z',
+  share: 'M22 2 11 13M22 2l-7 20-4-9-9-4z', bookmark: 'M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z',
+  book: 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5zM4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5',
+  question: 'M12 2a10 10 0 1 0 0 20 10 10 0 1 0 0-20M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01', lightbulb: 'M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z',
+  python: 'M12 2c-5 0-5 2-5 3v3h5v1H5c-2 0-3 2-3 5s1 5 3 5h2v-3c0-1.7 1.3-3 3-3h5c1.7 0 3-1.3 3-3V5c0-1-1-3-6-3zM9 5h.01M12 22c5 0 5-2 5-3v-3h-5v-1h7c2 0 3-2 3-5s-1-5-3-5h-2v3c0 1.7-1.3 3-3 3H9c-1.7 0-3 1.3-3 3v5c0 1 1 3 6 3zM15 19h.01',
+};
+const P2 = {};
+function icon(name, x, y, size, col, lw = 2) {
+  const p = P2[name] || (P2[name] = new Path2D(IC[name] || IC.box));
+  ctx.save(); ctx.translate(x, y); ctx.scale(size / 24, size / 24);
+  ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(p); ctx.restore();
+}
+
+/* =================== scene preparation & timing =================== */
+const SC = D.scenes.map((s, i) => Object.assign({}, s, { i }));
+const PH_TYPES = new Set(['step', 'flow', 'compare']);
+let phaseN = 0, curSec = '';
+SC.forEach(s => {
+  s.phase = PH_TYPES.has(s.type) && !s.x;
+  if (s.phase) s.pn = ++phaseN;
+  if (s.sec) curSec = s.sec; s.secName = s.phase ? curSec : '';
+  s.name = s.name || s.title || s.type;
+  const toks = String(s.n || '').trim().split(/\s+/).filter(Boolean);
+  const wts = toks.map(w => Math.max(2, w.replace(/[^\w]/g, '').length) + (/[,;:]$/.test(w) ? 3 : 0) + (/[.!?]$/.test(w) ? 6 : 0));
+  const span = toks.length / WPS, tw = wts.reduce((a, b) => a + b, 0) || 1;
+  let acc = LEAD; s.words = toks.map((w, k) => { const d = span * wts[k] / tw; const o = { w, t0: acc, t1: acc + d }; acc += d; return o; });
+  s.speech = span;
+  const ch = []; let cur = [];
+  s.words.forEach((o, k) => { cur.push(k); if (cur.length >= 7 || /[.!?,;:]$/.test(o.w) && cur.length >= 3) { ch.push(cur); cur = []; } });
+  if (cur.length) ch.push(cur); s.chunks = ch;
+});
+const PHASES = SC.filter(s => s.phase);
+const SECTIONS = [...new Set(PHASES.map(s => s.secName).filter(Boolean))];
+let STRETCH = 1, starts = [], TOTAL = 0;
+let HOLD = 0;
+function rawDur(s) { return Math.max(s.min || 5, LEAD + s.speech + PAD + (s.cmd ? 1.2 : 0)); }
+{ const nCmd = SC.filter(s => s.cmd).length, base = SC.reduce((a, s) => a + rawDur(s), 0);
+  if (D.target && nCmd) HOLD = clamp((D.target * 60 * 0.985 - base) / nCmd, 0, 8); }
+function baseDur(s) { return rawDur(s) + (s.cmd ? HOLD : 0); }
+function retime() {
+  let acc = 0; starts = SC.map(s => { s.dur = (s.fit ? Math.max(baseDur(s), s.fit) : baseDur(s)) * STRETCH; const st = acc; acc += s.dur; return st; });
+  TOTAL = acc; SC.forEach(s => prepReveal(s)); drawTicks();
+}
+const STOP = new Set('the a an and or of to in on for with is are be by it its this that your you we our as at from into one two use run get set new not can all any each'.split(' '));
+function anchors(s, labels, f0 = 0.08, f1 = 0.78) {
+  const ws = s.words, n = labels.length, sp = Math.max(1, s.speech), out = []; let k = 0;
+  labels.forEach((lab, i) => {
+    const even = LEAD + sp * (f0 + (f1 - f0) * (n < 2 ? 0 : i / (n - 1)));
+    const keys = String(lab).toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length >= 3 && !STOP.has(w));
+    let hit = -1;
+    for (let j = k; j < ws.length && hit < 0; j++) {
+      const w = ws[j].w.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (w.length >= 3 && keys.some(kw => w.startsWith(kw.slice(0, Math.min(5, kw.length))))) hit = j;
+    }
+    let t = hit >= 0 ? ws[hit].t0 : even;
+    if (hit >= 0) k = hit + 1;
+    if (out.length && t < out[out.length - 1] + 0.45) t = out[out.length - 1] + 0.45;
+    out.push(Math.min(t, LEAD + sp));
+  });
+  return out;
+}
+function prepReveal(s) {
+  const sp = Math.max(1, s.speech);
+  if (s.items) s.itT = anchors(s, s.items.map(it => it[1]));
+  if (s.nodes) s.ndT = anchors(s, s.nodes.map(n => n[1]), 0.06, 0.7);
+  if (s.rows) s.rwT = anchors(s, s.rows.map(r => Array.isArray(r) ? r[0] : r), 0.1, 0.8);
+  if (s.points) s.ptT = anchors(s, s.points, 0.06, 0.8);
+  if (s.repos) s.rpT = anchors(s, s.repos.map(r => r[0].split('/').pop().replace(/-/g, ' ')), 0.05, 0.85);
+  if (s.cmd) { const n = s.cmd.length; s.cmT = s.cmd.map((_, k) => LEAD + sp * (0.12 + 0.76 * (n < 2 ? 0 : k / (n - 1)))); }
+  s.tipT = LEAD + sp * 0.82;
+}
+
+/* =================== text helpers =================== */
+const OVER = new Map();
+function font(w, px, mono) { ctx.font = `${w} ${px}px ${mono ? MONO : SANS}`; }
+function wrap(text, maxW, maxLines, tag) {
+  const words = String(text).split(' '); const lines = []; let cur = '';
+  for (const w of words) { const t = cur ? cur + ' ' + w : w; if (!cur || ctx.measureText(t).width <= maxW) cur = t; else { lines.push(cur); cur = w; } }
+  if (cur) lines.push(cur);
+  lines.forEach(l => { if (ctx.measureText(l).width > maxW + 1) OVER.set(tag + ':' + l, { tag, text: l, issue: 'too wide' }); });
+  if (lines.length > maxLines) {
+    OVER.set(tag + ':' + text, { tag, text, issue: `${lines.length} lines > ${maxLines}` });
+    const keep = lines.slice(0, maxLines); let last = keep[maxLines - 1];
+    while (last.length > 1 && ctx.measureText(last + '…').width > maxW) last = last.slice(0, -1);
+    keep[maxLines - 1] = last + '…'; return keep;
+  }
+  return lines;
+}
+function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+function fillRR(x, y, w, h, r, c) { rr(x, y, w, h, r); ctx.fillStyle = c; ctx.fill(); }
+
+/* =================== drawing: chrome =================== */
+let ccOn = true, ccForce = false;
+function drawChrome(s, t) {
+  ctx.fillStyle = TH.bg; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = TH.line; ctx.fillRect(0, 0, W, 5); ctx.fillStyle = TH.accent; ctx.fillRect(0, 0, W * clamp(t / TOTAL), 5);
+  ctx.beginPath(); ctx.arc(76, 56, 13, 0, Math.PI * 2); ctx.fillStyle = TH.accent; ctx.fill();
+  font(700, 26); ctx.fillStyle = TH.muted; ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.fillText('kona-srinivas-gate', 102, 57);
+  font(600, 24); ctx.textAlign = 'center'; ctx.fillText(D.title, W / 2, 57); ctx.textAlign = 'left';
+  if (SECTIONS.length) {
+    const cur = s.phase ? SECTIONS.indexOf(s.secName) : -1, dot = 12, gap = 12;
+    let x = W - 90 - SECTIONS.length * (dot + gap);
+    SECTIONS.forEach((n, k) => { ctx.beginPath(); ctx.arc(x + k * (dot + gap) + dot / 2, 57, k === cur ? 7 : 5, 0, Math.PI * 2); ctx.fillStyle = k === cur ? TH.accent : k < cur ? TH.muted : TH.line; ctx.fill(); });
+    if (cur >= 0) { font(600, 22); ctx.fillStyle = TH.text; ctx.textAlign = 'right'; ctx.fillText(SECTIONS[cur], x - 18, 57); ctx.textAlign = 'left'; }
+  }
+  font(500, 22); ctx.fillStyle = TH.muted; ctx.textAlign = 'center';
+  ctx.fillText(`kona-srinivas-gate  •  ${D.tags || ''}`, W / 2, 1052); ctx.textAlign = 'left';
+}
+function curWord(s, L) {
+  if (spk.scene === s.i && performance.now() - spk.ts < 2500 && !REC) return spk.idx;
+  let k = -1; for (let j = 0; j < s.words.length; j++) { if (s.words[j].t0 <= L) k = j; else break; } return k;
+}
+function drawCaptions(s, L) {
+  if (!(ccOn || ccForce) || !s.words.length) return;
+  if (L < LEAD - 0.05 || L > LEAD + s.speech + 0.6) return;
+  const wi = Math.max(0, curWord(s, L)); const ch = s.chunks.find(c => c.includes(wi)) || s.chunks[0];
+  let px = 38; font(600, px); const txt = ch.map(k => s.words[k].w).join(' ');
+  while (ctx.measureText(txt).width > 1560 && px > 26) { px -= 2; font(600, px); }
+  const tw = ctx.measureText(txt).width; fillRR(W / 2 - tw / 2 - 28, 908, tw + 56, 72, 16, 'rgba(10,14,20,.88)');
+  let x = W / 2 - tw / 2; ctx.textBaseline = 'middle';
+  ch.forEach(k => { const w = s.words[k].w; ctx.fillStyle = k === wi ? TH.accent : k < wi ? TH.text : TH.muted; ctx.fillText(w, x, 945); x += ctx.measureText(w + ' ').width; });
+}
+function chip(text, x, y, a) {
+  font(700, 22); const w = ctx.measureText(text).width + 36;
+  ctx.globalAlpha = a; fillRR(x, y, w, 42, 21, hexA(TH.accent, 0.16)); ctx.strokeStyle = hexA(TH.accent, 0.55); ctx.lineWidth = 1.5; rr(x, y, w, 42, 21); ctx.stroke();
+  ctx.fillStyle = TH.accent; ctx.textBaseline = 'middle'; ctx.fillText(text, x + 18, y + 22); ctx.globalAlpha = 1; return w;
+}
+function title(text, x, y, maxW, a, px = 60, maxLines = 2) {
+  font(700, px); const lines = wrap(text, maxW, maxLines, 'title'); ctx.globalAlpha = a; ctx.fillStyle = TH.text; ctx.textBaseline = 'top';
+  lines.forEach((l, k) => ctx.fillText(l, x, y + k * px * 1.18)); ctx.globalAlpha = 1; return lines.length * px * 1.18;
+}
+function activeIndex(times, L) { let k = -1; times.forEach((t, i) => { if (L >= t) k = i; }); return k; }
+function tipBar(s, L, x, y, w) {
+  if (!s.tip) return; const a = ease((L - s.tipT) / 0.4); if (a <= 0) return;
+  font(600, 27); const lines = wrap(s.tip, w - 100, 2, 'tip'), hh = lines.length > 1 ? 96 : 70; y = y + 70 - hh;
+  ctx.globalAlpha = a; fillRR(x, y, w, hh, 14, TH.surface); ctx.fillStyle = TH.accent; ctx.fillRect(x, y + 12, 5, hh - 24);
+  icon('lightbulb', x + 24, y + hh / 2 - 16, 32, TH.warn); ctx.fillStyle = TH.text; ctx.textBaseline = 'middle';
+  lines.forEach((l, k) => ctx.fillText(l, x + 72, y + hh / 2 + (k - (lines.length - 1) / 2) * 34)); ctx.globalAlpha = 1;
+}
+
+/* =================== drawing: components =================== */
+function card(it, x, y, w, h, a, state) {
+  if (a <= 0) return; ctx.globalAlpha = a * (state === 'past' ? 0.5 : 1);
+  const dy = (1 - a) * 18; y += dy;
+  fillRR(x, y, w, h, 14, state === 'active' ? TH.surface2 : TH.surface);
+  if (state === 'active') { ctx.strokeStyle = hexA(TH.accent, 0.8); ctx.lineWidth = 2; rr(x, y, w, h, 14); ctx.stroke(); ctx.fillStyle = TH.accent; ctx.fillRect(x, y + 14, 5, h - 28); }
+  const ib = h - 28; fillRR(x + 18, y + 14, ib, ib, 12, hexA(TH.accent, state === 'active' ? 0.22 : 0.12));
+  icon(it[0], x + 18 + ib * 0.2, y + 14 + ib * 0.2, ib * 0.6, state === 'active' ? TH.accent : TH.muted);
+  const tx = x + 18 + ib + 20, tw = w - (tx - x) - 18; ctx.textBaseline = 'alphabetic';
+  font(650, it[2] ? 30 : 32); ctx.fillStyle = TH.text; const l1 = wrap(it[1], tw, 1, 'label');
+  if (it[2]) { ctx.fillText(l1[0], tx, y + h / 2 - 4); font(400, 23); ctx.fillStyle = TH.muted; const l2 = wrap(it[2], tw, 1, 'sub'); ctx.fillText(l2[0], tx, y + h / 2 + 28); }
+  else { ctx.textBaseline = 'middle'; ctx.fillText(l1[0], tx, y + h / 2); }
+  ctx.globalAlpha = 1;
+}
+function terminal(s, L, x, y, w, h) {
+  const a = ease((L - LEAD + 0.1) / 0.4); if (a <= 0) return; ctx.globalAlpha = a;
+  fillRR(x, y, w, h, 16, TH.term); ctx.strokeStyle = TH.line; ctx.lineWidth = 1.5; rr(x, y, w, h, 16); ctx.stroke();
+  ['#ff5f57', '#febc2e', '#28c840'].forEach((c, k) => { ctx.beginPath(); ctx.arc(x + 26 + k * 22, y + 24, 7, 0, Math.PI * 2); ctx.fillStyle = c; ctx.fill(); });
+  font(500, 20); ctx.fillStyle = TH.muted; ctx.textBaseline = 'middle'; ctx.fillText(s.term || 'terminal', x + 100, y + 25);
+  font(500, 23, true); const cw = ctx.measureText('M').width, maxC = Math.floor((w - 44) / cw), lh = 33;
+  const rows = [];
+  s.cmd.forEach((line, k) => {
+    const t0 = s.cmT[k]; if (L < t0) return;
+    const isCmd = line.startsWith('$ ') || line.startsWith('# ') || line.startsWith('PS> ') || line.startsWith('>>> ');
+    let txt = line; if (isCmd) { const n = Math.floor(clamp((L - t0) / Math.max(0.5, Math.min(1.4, line.length * 0.035))) * line.length); txt = line.slice(0, n); }
+    for (let p = 0; p < Math.max(1, txt.length); p += maxC) rows.push({ txt: (p ? '  ' : '') + txt.slice(p, p + maxC - (p ? 2 : 0)), isCmd, first: p === 0, typing: isCmd && txt.length < line.length });
+  });
+  const vis = Math.floor((h - 70) / lh); const show = rows.slice(Math.max(0, rows.length - vis));
+  show.forEach((r, k) => {
+    const yy = y + 66 + k * lh;
+    if (r.isCmd && r.first) { const pre = r.txt.match(/^(\$ |# |PS> |>>> )/); const p = pre ? pre[0] : ''; ctx.fillStyle = TH.accent; ctx.fillText(p, x + 22, yy); ctx.fillStyle = TH.text; ctx.fillText(r.txt.slice(p.length), x + 22 + ctx.measureText(p).width, yy); }
+    else { ctx.fillStyle = r.isCmd ? TH.text : r.txt.startsWith('#') ? TH.muted : '#c3cad5'; ctx.fillText(r.txt, x + 22, yy); }
+    if (k === show.length - 1 && (r.typing || Math.floor(L * 2) % 2 === 0)) { const cx = x + 22 + ctx.measureText(r.txt).width + 4; ctx.fillStyle = TH.accent; ctx.fillRect(cx, yy - 13, cw * 0.6, 26); }
+  });
+  ctx.globalAlpha = 1;
+}
+function hero(name, cx, cy, r, a, L) {
+  if (a <= 0) return; ctx.globalAlpha = a; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = hexA(TH.accent, 0.1); ctx.fill();
+  ctx.lineWidth = 3; ctx.strokeStyle = hexA(TH.accent, 0.5); ctx.stroke();
+  const pr = r * (1.06 + 0.04 * Math.sin(L * Math.PI)); ctx.beginPath(); ctx.arc(cx, cy, pr, 0, Math.PI * 2); ctx.strokeStyle = hexA(TH.accent, 0.15); ctx.stroke();
+  icon(name, cx - r * 0.55, cy - r * 0.55, r * 1.1, TH.accent, 1.6); ctx.globalAlpha = 1;
+}
+
+/* =================== drawing: scene types =================== */
+function drawStep(s, L) {
+  const a0 = ease(L / 0.35), right = !!(s.cmd || s.icon);
+  const lx = 100, lw = right ? 820 : 1720;
+  chip(s.phase ? `STEP ${s.pn} / ${PHASES.length}` + (s.secName ? `  ·  ${s.secName.toUpperCase()}` : '') : (s.chip || s.name).toUpperCase(), lx, 132, a0);
+  const th = title(s.title, lx, 196, lw, a0, s.items && s.items.length > 4 ? 54 : 60);
+  if (s.items) {
+    const n = s.items.length, y0 = 196 + th + 28, avail = (right ? 870 : (s.tip ? 754 : 870)) - y0, gap = 12;
+    const ch = Math.min(100, (avail - gap * (n - 1)) / n); const ai = activeIndex(s.itT, L);
+    s.items.forEach((it, k) => card(it, lx, y0 + k * (ch + gap), lw, ch, ease((L - s.itT[k]) / 0.35), k === ai && L < s.tipT ? 'active' : (k < ai || L >= s.tipT) ? 'past' : 'active'));
+  }
+  if (s.cmd) { terminal(s, L, 980, 132, 840, s.tip ? 594 : 738); tipBar(s, L, 980, 776, 840); }
+  else if (s.icon) { hero(s.icon, 1400, 430, 210, a0, L); tipBar(s, L, 980, 776, 840); }
+  else tipBar(s, L, 100, 800, 1720);
+}
+function drawFlow(s, L) {
+  const a0 = ease(L / 0.35);
+  chip(s.phase ? `STEP ${s.pn} / ${PHASES.length}` + (s.secName ? `  ·  ${s.secName.toUpperCase()}` : '') : (s.chip || s.name).toUpperCase(), 100, 132, a0);
+  title(s.title, 100, 196, 1720, a0, 60, 1);
+  const n = s.nodes.length, gapX = 90, bw = Math.min(330, (1720 - gapX * (n - 1)) / n), bh = 210;
+  const totalW = n * bw + (n - 1) * gapX, x0 = (W - totalW) / 2, y0 = s.items ? 330 : 380; const ai = activeIndex(s.ndT, L);
+  s.nodes.forEach((nd, k) => {
+    const a = ease((L - s.ndT[k]) / 0.4); if (a <= 0) return; const x = x0 + k * (bw + gapX), act = k === ai && L < s.tipT;
+    ctx.globalAlpha = a * (act || L >= s.tipT ? 1 : 0.55);
+    fillRR(x, y0, bw, bh, 18, act ? TH.surface2 : TH.surface); ctx.strokeStyle = act ? TH.accent : TH.line; ctx.lineWidth = act ? 2.5 : 1.5; rr(x, y0, bw, bh, 18); ctx.stroke();
+    icon(nd[0], x + bw / 2 - 30, y0 + 26, 60, act ? TH.accent : TH.muted);
+    font(650, 28); ctx.fillStyle = TH.text; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    const ls = wrap(nd[1], bw - 30, 2, 'node'); ls.forEach((l, j) => ctx.fillText(l, x + bw / 2, y0 + 128 + j * 32));
+    if (nd[2]) { font(400, 21); ctx.fillStyle = TH.muted; const sl = wrap(nd[2], bw - 30, 1, 'nodesub'); ctx.fillText(sl[0], x + bw / 2, y0 + 128 + ls.length * 32 + 8); }
+    ctx.textAlign = 'left';
+    if (k < n - 1) {
+      const ax = x + bw + 10, aw = gapX - 20, ay = y0 + bh / 2, ea = ease((L - s.ndT[k + 1]) / 0.4);
+      if (ea > 0) {
+        ctx.globalAlpha = ea; ctx.strokeStyle = TH.accent; ctx.lineWidth = 3; ctx.setLineDash([8, 8]); ctx.lineDashOffset = -L * 30;
+        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax + aw - 12, ay); ctx.stroke(); ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(ax + aw, ay); ctx.lineTo(ax + aw - 14, ay - 9); ctx.lineTo(ax + aw - 14, ay + 9); ctx.closePath(); ctx.fillStyle = TH.accent; ctx.fill();
+        if (s.edges && s.edges[k]) { font(600, 19); ctx.fillStyle = TH.muted; ctx.textAlign = 'center'; const el = wrap(s.edges[k], gapX + 50, 2, 'edge'); el.forEach((l, j) => ctx.fillText(l, ax + aw / 2, ay - 22 - (el.length - 1 - j) * 22)); ctx.textAlign = 'left'; }
+      }
+    }
+    ctx.globalAlpha = 1;
+  });
+  if (s.items) {
+    const m = s.items.length, cw = (1720 - 16 * (m - 1)) / m, ys = y0 + bh + 40, it2 = anchors(s, s.items.map(i => i[1]), 0.55, 0.8);
+    s.items.forEach((it, k) => card(it, 100 + k * (cw + 16), ys, cw, 96, ease((L - it2[k]) / 0.35), 'active'));
+  }
+  tipBar(s, L, 100, 800, 1720);
+}
+function drawCompare(s, L) {
+  const a0 = ease(L / 0.35);
+  chip(s.phase ? `STEP ${s.pn} / ${PHASES.length}` + (s.secName ? `  ·  ${s.secName.toUpperCase()}` : '') : (s.chip || s.name).toUpperCase(), 100, 132, a0);
+  title(s.title, 100, 196, 1720, a0, 58, 1);
+  const lead = s.cols.length === s.rows[0].length, cols = lead ? s.cols.slice(1) : s.cols, nc = cols.length, firstW = s.firstW || 330, cw = (1720 - firstW) / nc, rh = s.rows.length > 5 ? 66 : 78, y0 = 300;
+  ctx.globalAlpha = a0; fillRR(100, y0, 1720, rh, 12, TH.surface2); font(700, 27); ctx.fillStyle = TH.accent; ctx.textBaseline = 'middle';
+  if (lead) ctx.fillText(wrap(s.cols[0], firstW - 40, 1, 'colh')[0], 124, y0 + rh / 2);
+  cols.forEach((c, k) => { const l = wrap(c, cw - 30, 1, 'colh'); ctx.fillText(l[0], 100 + firstW + k * cw + 20, y0 + rh / 2); }); ctx.globalAlpha = 1;
+  const ai = activeIndex(s.rwT, L);
+  s.rows.forEach((r, k) => {
+    const a = ease((L - s.rwT[k]) / 0.35); if (a <= 0) return; const y = y0 + (k + 1) * (rh + 6);
+    ctx.globalAlpha = a * (k === ai || L >= s.tipT ? 1 : 0.6); fillRR(100, y, 1720, rh, 12, k === ai ? TH.surface2 : TH.surface);
+    if (k === ai) { ctx.fillStyle = TH.accent; ctx.fillRect(100, y + 12, 5, rh - 24); }
+    font(650, 26); ctx.fillStyle = TH.text; const l0 = wrap(r[0], firstW - 40, 1, 'rowh'); ctx.fillText(l0[0], 124, y + rh / 2);
+    font(400, 25); ctx.fillStyle = '#c9d1dc'; r.slice(1).forEach((c, j) => { const l = wrap(c, cw - 30, 1, 'cell'); ctx.fillText(l[0], 100 + firstW + j * cw + 20, y + rh / 2); });
+    ctx.globalAlpha = 1;
+  });
+  const end = y0 + (s.rows.length + 1) * (rh + 6); if (end < 790) tipBar(s, L, 100, 800, 1720);
+}
+function drawMistakes(s, L) {
+  const a0 = ease(L / 0.35); chip((s.chip || 'Common mistakes').toUpperCase(), 100, 132, a0); title(s.title || 'Common mistakes', 100, 196, 1720, a0, 60, 1);
+  const n = s.rows.length, rh = Math.min(150, (560 - 18 * (n - 1)) / n), ai = activeIndex(s.rwT, L);
+  s.rows.forEach((r, k) => {
+    const a = ease((L - s.rwT[k]) / 0.35); if (a <= 0) return; const y = 300 + k * (rh + 18);
+    ctx.globalAlpha = a * (k === ai || L > s.tipT ? 1 : 0.6);
+    fillRR(100, y, 840, rh, 14, TH.surface); fillRR(980, y, 840, rh, 14, TH.surface2);
+    icon('x', 124, y + rh / 2 - 18, 36, TH.bad, 3); icon('check', 1004, y + rh / 2 - 18, 36, TH.ok, 3);
+    font(600, 28); ctx.textBaseline = 'middle';
+    ctx.fillStyle = TH.muted; const lw = wrap(r[0], 740, 2, 'wrong'); lw.forEach((l, j) => { const yy = y + rh / 2 + (j - (lw.length - 1) / 2) * 36; ctx.fillText(l, 180, yy); ctx.fillRect(180, yy, ctx.measureText(l).width, 2); });
+    ctx.fillStyle = TH.text; const lr = wrap(r[1], 740, 2, 'right'); lr.forEach((l, j) => ctx.fillText(l, 1060, y + rh / 2 + (j - (lr.length - 1) / 2) * 36));
+    ctx.globalAlpha = 1;
+  });
+}
+function drawHook(s, L) {
+  const a = ease(L / 0.5); hero(s.icon || D.icon || 'rocket', 470, 500, 230, a, L);
+  font(700, 30); ctx.globalAlpha = a; ctx.fillStyle = TH.accent; ctx.textBaseline = 'top'; ctx.fillText((s.kicker || D.sub || '').toUpperCase(), 820, 260); ctx.globalAlpha = 1;
+  const th = title(s.title || D.title, 820, 310, 1000, a, 82, 3);
+  const qa = ease((L - LEAD - s.speech * 0.45) / 0.5);
+  if (s.q && qa > 0) { ctx.globalAlpha = qa; font(500, 36); ctx.fillStyle = TH.muted; const ql = wrap(s.q, 1000, 2, 'q'); ql.forEach((l, k) => ctx.fillText(l, 820, 330 + th + k * 46)); ctx.globalAlpha = 1; }
+  const ca = ease((L - LEAD - s.speech * 0.7) / 0.5);
+  if (ca > 0) { chip(`${PHASES.length} STEPS  ·  ${Math.round(TOTAL / 60)} MIN  ·  SOLVE ALONG`, 820, 760, ca); }
+}
+function drawRoadmap(s, L) {
+  const a0 = ease(L / 0.35); chip('ROADMAP', 100, 132, a0); title(s.title || `${PHASES.length} steps, start to finish`, 100, 196, 1720, a0, 60, 1);
+  const sp = Math.max(2, s.speech);
+  if (SECTIONS.length > 1 && PHASES.length > 24) {
+    const cols = 3, n = SECTIONS.length, rows = Math.ceil(n / cols), cw = (1720 - 24 * (cols - 1)) / cols, ch = Math.min(120, (540 - 18 * (rows - 1)) / rows);
+    SECTIONS.forEach((sec, k) => {
+      const at = LEAD + sp * 0.9 * k / n, a = ease((L - at) / 0.35); if (a <= 0) return;
+      const x = 100 + (k % cols) * (cw + 24), y = 310 + Math.floor(k / cols) * (ch + 18), cnt = PHASES.filter(p => p.secName === sec).length;
+      ctx.globalAlpha = a; fillRR(x, y, cw, ch, 14, TH.surface); font(800, 30); ctx.fillStyle = TH.accent; ctx.textBaseline = 'middle'; ctx.fillText(String(k + 1).padStart(2, '0'), x + 24, y + ch / 2);
+      font(650, 30); ctx.fillStyle = TH.text; ctx.fillText(wrap(sec, cw - 230, 1, 'sec')[0], x + 88, y + ch / 2 - 14); font(400, 22); ctx.fillStyle = TH.muted; ctx.fillText(`${cnt} step${cnt > 1 ? 's' : ''}`, x + 88, y + ch / 2 + 20); ctx.globalAlpha = 1;
+    });
+  } else {
+    const n = PHASES.length, cols = n > 18 ? 4 : n > 10 ? 3 : 2, rows = Math.ceil(n / cols), cw = (1720 - 20 * (cols - 1)) / cols, ch = Math.min(84, (560 - 10 * (rows - 1)) / rows);
+    PHASES.forEach((p, k) => {
+      const at = LEAD + sp * 0.9 * k / n, a = ease((L - at) / 0.3); if (a <= 0) return;
+      const c = Math.floor(k / rows), r = k % rows, x = 100 + c * (cw + 20), y = 300 + r * (ch + 10);
+      ctx.globalAlpha = a; fillRR(x, y, cw, ch, 12, TH.surface); font(800, 24); ctx.fillStyle = TH.accent; ctx.textBaseline = 'middle'; ctx.fillText(String(p.pn).padStart(2, '0'), x + 18, y + ch / 2);
+      let fz = ch < 60 ? 23 : 26; const nm = p.short || p.name; font(600, fz); while (ctx.measureText(nm).width > cw - 84 && fz > 18) font(600, --fz); ctx.fillStyle = TH.text; ctx.fillText(wrap(nm, cw - 80, 1, 'rm')[0], x + 66, y + ch / 2); ctx.globalAlpha = 1;
+    });
+  }
+}
+function drawRepos(s, L) {
+  const a0 = ease(L / 0.35); chip((s.chip || 'Practice repos').toUpperCase(), 100, 132, a0); title(s.title || 'Try these yourself', 100, 196, 1720, a0, 60, 1);
+  const n = s.repos.length, cols = 2, rows = Math.ceil(n / cols), cw = 850, ch = Math.min(108, (560 - 12 * (rows - 1)) / rows);
+  s.repos.forEach((r, k) => {
+    const a = ease((L - s.rpT[k]) / 0.35); if (a <= 0) return; const x = 100 + (k % cols) * (cw + 20), y = 300 + Math.floor(k / cols) * (ch + 12);
+    ctx.globalAlpha = a; fillRR(x, y, cw, ch, 14, TH.surface); icon(r[3] || 'git', x + 20, y + ch / 2 - 18, 36, TH.accent);
+    font(650, ch < 90 ? 24 : 27, true); ctx.fillStyle = TH.accent; ctx.textBaseline = 'alphabetic'; ctx.fillText(wrap(r[0], cw - 90, 1, 'repo')[0], x + 74, y + ch / 2 - 6);
+    font(400, ch < 90 ? 20 : 22); ctx.fillStyle = TH.muted; ctx.fillText(wrap(r[1], cw - 90, 1, 'repod')[0], x + 74, y + ch / 2 + 26); ctx.globalAlpha = 1;
+  });
+}
+function drawRecap(s, L) {
+  const a0 = ease(L / 0.35); chip('RECAP', 100, 132, a0); title(s.title || 'What you learned', 100, 196, 1720, a0, 60, 1);
+  const n = s.points.length, rh = Math.min(76, (440 - 10 * (n - 1)) / n);
+  s.points.forEach((p, k) => {
+    const a = ease((L - s.ptT[k]) / 0.35); if (a <= 0) return; const y = 296 + k * (rh + 10);
+    ctx.globalAlpha = a; fillRR(100, y, 1720, rh, 12, TH.surface); ctx.beginPath(); ctx.arc(140, y + rh / 2, 18, 0, Math.PI * 2); ctx.fillStyle = TH.ok; ctx.fill();
+    icon('check', 128, y + rh / 2 - 12, 24, '#06210f', 3.2); font(600, 28); ctx.fillStyle = TH.text; ctx.textBaseline = 'middle'; ctx.fillText(wrap(p, 1600, 1, 'pt')[0], 180, y + rh / 2); ctx.globalAlpha = 1;
+  });
+  const ca = ease((L - LEAD - s.speech * 0.8) / 0.5);
+  if (ca > 0) {
+    ctx.globalAlpha = ca; const items = [['heart', 'Like'], ['comment', `Comment "${D.keyword || 'GATE'}"`], ['share', 'Share'], ['bookmark', 'Save']];
+    font(700, 32); ctx.fillStyle = TH.text; ctx.textBaseline = 'middle'; ctx.fillText(`Follow ${D.handle || '@kona.srinivas.gate'}`, 100, 812);
+    let x = 760; items.forEach(([ic, lb]) => { icon(ic, x, 794, 36, TH.accent); font(600, 26); ctx.fillStyle = TH.text; ctx.fillText(lb, x + 48, 812); x += 70 + ctx.measureText(lb).width + 40; }); ctx.globalAlpha = 1;
+  }
+}
+const DRAW = { hook: drawHook, roadmap: drawRoadmap, step: drawStep, flow: drawFlow, compare: drawCompare, mistakes: drawMistakes, repos: drawRepos, recap: drawRecap };
+function sceneAt(t) { for (let k = 0; k < SC.length; k++) if (t < starts[k] + SC[k].dur) return k; return SC.length - 1; }
+function draw(t) {
+  t = clamp(t, 0, TOTAL - 0.001); const i = sceneAt(t), s = SC[i], L = t - starts[i];
+  drawChrome(s, t); (DRAW[s.type] || drawStep)(s, L); drawCaptions(s, L);
+  ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left'; ctx.globalAlpha = 1;
+}
+
+/* =================== playback state =================== */
+let t = 0, playing = false, speed = 1, loop = false, muted = false, cur = -1, last = performance.now();
+let audioMode = 'default';              // 'default' | 'mine'
+let REC = null, SREC = null;            // video export / studio recording
+const synth = window.speechSynthesis || null;
+let voices = [], voice = null, spk = { scene: -1, idx: -1, ts: 0 }, speakTimer = 0;
+
+function loadVoices() {
+  if (!synth) { $('voiceSel').innerHTML = '<option>No browser voice</option>'; return; }
+  voices = synth.getVoices().filter(v => /^en(-|_|$)/i.test(v.lang));
+  if (!voices.length) voices = synth.getVoices();
+  const score = v => (/natural|neural/i.test(v.name) ? 6 : 0) + (/google/i.test(v.name) ? 4 : 0) + (/daniel|alex|aaron|arthur|guy|ryan|male/i.test(v.name) ? 3 : 0) + (/en-(us|gb|in)/i.test(v.lang) ? 1 : 0);
+  voices.sort((a, b) => score(b) - score(a));
+  const saved = localStorage.getItem('kd-voice');
+  voice = voices.find(v => v.name === saved) || voices[0] || null;
+  $('voiceSel').innerHTML = voices.map(v => `<option${v === voice ? ' selected' : ''}>${v.name.replace(/</g, '')}</option>`).join('') || '<option>Default voice</option>';
+}
+if (synth) { loadVoices(); synth.onvoiceschanged = loadVoices; }
+$('voiceSel').onchange = e => { voice = voices.find(v => v.name === e.target.value) || voice; localStorage.setItem('kd-voice', voice ? voice.name : ''); restartSpeech(); };
+
+function speechWanted() {
+  if (!synth || muted) return false;
+  if (REC) return REC.opt.audio === 'default';
+  if (SREC) return false;
+  return playing && !(audioMode === 'mine' && MINE.url);
+}
+function stopSpeech() { clearTimeout(speakTimer); if (synth) synth.cancel(); }
+function speakFrom(i, local) {
+  stopSpeech(); if (!speechWanted()) return;
+  const s = SC[i], ws = s.words; if (!ws.length) return;
+  let k = local < LEAD ? 0 : ws.findIndex(w => w.t1 > local); if (k < 0) return;
+  const sents = []; let cur = [];
+  for (let j = k; j < ws.length; j++) { cur.push(j); if (/[.!?]$/.test(ws[j].w) || cur.length >= 28) { sents.push(cur); cur = []; } }
+  if (cur.length) sents.push(cur);
+  const sp = REC ? 1 : speed;
+  const go = () => {
+    if (!speechWanted() || sceneAt(t) !== i) return;
+    sents.forEach(idx => {
+      const u = new SpeechSynthesisUtterance(idx.map(j => ws[j].w).join(' '));
+      if (voice) { u.voice = voice; u.lang = voice.lang; } u.rate = Math.min(2, 0.95 * sp);
+      const offs = []; let c = 0; idx.forEach(j => { offs.push(c); c += ws[j].w.length + 1; });
+      u.onstart = () => { spk = { scene: i, idx: idx[0], ts: performance.now() }; };
+      u.onboundary = e => { if (e.name && e.name !== 'word') return; let m = 0; while (m + 1 < offs.length && offs[m + 1] <= e.charIndex) m++; spk = { scene: i, idx: idx[m], ts: performance.now() }; };
+      synth.speak(u);
+    });
+  };
+  const delay = local < LEAD ? (LEAD - local) / sp * 1000 : 0;
+  if (delay > 0) speakTimer = setTimeout(go, delay); else go();
+}
+function restartSpeech() { const i = sceneAt(t); speakFrom(i, t - starts[i]); }
+
+const mineEl = $('mine');
+function syncMine() {
+  const want = !REC && !SREC && playing && !muted && audioMode === 'mine' && MINE.url;
+  if (!want) { if (!mineEl.paused) mineEl.pause(); return; }
+  mineEl.playbackRate = speed; mineEl.preservesPitch = true;
+  if (Math.abs(mineEl.currentTime - t) > 0.3) mineEl.currentTime = Math.min(t, mineEl.duration || t);
+  if (mineEl.paused) mineEl.play().catch(() => {});
+}
+
+function setPlaying(p) {
+  if (p && t >= TOTAL - 0.05) seekTo(0);
+  playing = p; last = performance.now(); $('tap').hidden = true;
+  $('bPlay').textContent = p ? '❚❚ Pause' : '▶ Play';
+  if (p) restartSpeech(); else stopSpeech();
+}
+function seekTo(v) { t = clamp(v, 0, TOTAL - 0.001); cur = sceneAt(t); if (playing) restartSpeech(); }
+function setSpeed(n) { speed = n; document.querySelectorAll('#speeds button').forEach(b => b.classList.toggle('on', +b.dataset.s === n)); if (playing) restartSpeech(); }
+
+function frame(now) {
+  const dt = Math.min(0.25, (now - last) / 1000); last = now;
+  if (REC) t = REC.clock();
+  else if (playing) { t += dt * (SREC ? 1 : speed); if (t >= TOTAL) { if (loop && !SREC) { t = 0; cur = -1; } else { t = TOTAL - 0.001; setPlaying(false); } } }
+  const i = sceneAt(t); if (i !== cur) { cur = i; if (playing || REC) speakFrom(i, t - starts[i]); }
+  draw(t); syncMine(); if (REC) recTick(); if (SREC) studioTick(); if (!$('studio').hidden) { meterTick(); prompterTick(); }
+  ui(); requestAnimationFrame(frame);
+}
+let uiLast = 0;
+function ui() {
+  const now = performance.now(); if (now - uiLast < 120) return; uiLast = now;
+  if (document.activeElement !== $('seek')) $('seek').value = Math.round(t / TOTAL * 10000);
+  $('time').textContent = `${fmt(t)} / ${fmt(TOTAL)} @${speed}×`;
+  const s = SC[sceneAt(t)]; $('sceneName').textContent = `Scene ${s.i + 1}/${SC.length} · ${s.name}${s.phase ? ` · Step ${s.pn}/${PHASES.length}` : ''}${audioMode === 'mine' && MINE.url ? ' · 🎙 your voice' : ''}`;
+}
+function drawTicks() { const tk = $('ticks'); if (!tk) return; tk.innerHTML = starts.map(st => `<i style="left:${st / TOTAL * 100}%"></i>`).join(''); }
+
+/* =================== controls =================== */
+function toast(m, ms = 2600) { const e = $('toast'); e.textContent = m; e.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove('show'), ms); }
+$('tap').onclick = () => setPlaying(true);
+$('bPlay').onclick = () => setPlaying(!playing);
+$('bRestart').onclick = () => { seekTo(0); setPlaying(true); };
+$('speeds').onclick = e => { const b = e.target.closest('button'); if (b) setSpeed(+b.dataset.s); };
+$('bLoop').onclick = () => { loop = !loop; $('bLoop').classList.toggle('on', loop); };
+function setMuted(m) { muted = m; $('bMute').textContent = m ? '🔇' : '🔊'; $('bMute').classList.toggle('on', m); if (m) stopSpeech(); else if (playing) restartSpeech(); }
+$('bMute').onclick = () => setMuted(!muted);
+$('bCC').onclick = () => { ccOn = !ccOn; $('bCC').classList.toggle('on', ccOn); };
+$('seek').oninput = e => { $('tap').hidden = true; seekTo(e.target.value / 10000 * TOTAL); };
+$('bFs').onclick = () => document.fullscreenElement ? document.exitFullscreen() : $('stagewrap').requestFullscreen && $('stagewrap').requestFullscreen();
+$('bClean').onclick = () => document.body.classList.toggle('clean');
+$('bStudio').onclick = () => { $('studio').hidden = !$('studio').hidden; renderTakes(); };
+$('bMore').onclick = () => $('more').classList.toggle('open');
+document.addEventListener('click', e => { if (!e.target.closest('#more')) $('more').classList.remove('open'); });
+cv.onclick = () => { if (!REC && !SREC) setPlaying(!playing); };
+document.addEventListener('keydown', e => {
+  if (e.target.closest('input, select, textarea') || REC) { if (REC && e.key === 'Escape') cancelRec(); return; }
+  const k = e.key.toLowerCase();
+  if (k === ' ') { e.preventDefault(); setPlaying(!playing); }
+  else if ('1234'.includes(k) && k.length === 1) setSpeed(+k);
+  else if (k === 'arrowright') seekTo(t + 5); else if (k === 'arrowleft') seekTo(t - 5);
+  else if (k === 'r') { seekTo(0); setPlaying(true); } else if (k === 'l') $('bLoop').click(); else if (k === 'm') $('bMute').click();
+  else if (k === 'c') $('bCC').click(); else if (k === 'f') $('bFs').click(); else if (k === 'h') $('bClean').click();
+});
+function saveBlob(blob, name) { const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); }
+const FILE = `kona-srinivas-gate-${D.id}-1920x1080`;
+function timedScript() { return SC.map(s => `${fmtTC(starts[s.i])}-${fmtTC(starts[s.i] + s.dur)} | ${s.name} | ${s.n}`).join('\n'); }
+$('mScript').onclick = async () => { const txt = timedScript(); try { await navigator.clipboard.writeText(txt); toast('✓ Timed script copied'); } catch (e) { saveBlob(new Blob([txt], { type: 'text/plain' }), FILE + '-script.txt'); toast('Clipboard blocked: saved as a .txt file instead'); } };
+$('mSrt').onclick = () => {
+  const ts = x => { const h = Math.floor(x / 3600), m = Math.floor(x % 3600 / 60), s = Math.floor(x % 60), ms = Math.round((x % 1) * 1000); return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')},${String(ms).padStart(3, '0')}`; };
+  let n = 0; const out = [];
+  SC.forEach(s => s.chunks.forEach(c => { const a = starts[s.i] + s.words[c[0]].t0, b = starts[s.i] + s.words[c[c.length - 1]].t1; out.push(`${++n}\n${ts(a)} --> ${ts(b)}\n${c.map(k => s.words[k].w).join(' ')}\n`); }));
+  saveBlob(new Blob([out.join('\n')], { type: 'text/plain' }), FILE + '.srt');
+};
+$('mCues').onclick = () => saveBlob(new Blob([JSON.stringify(SC.map(s => ({ scene: s.name, start: +starts[s.i].toFixed(2), end: +(starts[s.i] + s.dur).toFixed(2), dur: +s.dur.toFixed(2), narration: s.n })), null, 2)], { type: 'application/json' }), FILE + '-cues.json');
+$('mFrame').onclick = () => cv.toBlob(b => saveBlob(b, `${FILE}-${Math.round(t)}s.png`), 'image/png');
+
+/* =================== Voice Studio =================== */
+const MINE = { takes: {}, full: null, buf: null, url: '', ready: false };
+let micStream = null, micCtx = null, micAn = null, micPeak = 0, selScene = 0;
+function getAC() { return micCtx || (micCtx = new (window.AudioContext || window.webkitAudioContext)()); }
+async function listMics() {
+  const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audioinput');
+  const saved = localStorage.getItem('kd-mic') || 'default';
+  $('micSel').innerHTML = devs.length ? devs.map((d, k) => `<option value="${d.deviceId}"${d.deviceId === saved ? ' selected' : ''}>${(d.label || 'Microphone ' + (k + 1)).replace(/</g, '')}</option>`).join('') : '<option>No microphone found</option>';
+  $('micSel').disabled = !devs.length; return devs;
+}
+async function openMic() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $('micMsg').textContent = 'Microphone not available in this browser/context. Open the file in Chrome.'; return false; }
+  if (micStream) micStream.getTracks().forEach(tr => tr.stop());
+  const id = $('micSel').disabled ? undefined : $('micSel').value;
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: id && id !== 'default' ? { exact: id } : undefined, noiseSuppression: $('cNs').checked, echoCancellation: $('cEc').checked, autoGainControl: $('cAgc').checked } });
+  } catch (e) {
+    $('micMsg').textContent = e.name === 'NotAllowedError' ? 'Permission denied: allow the microphone in the address bar.' : e.name === 'NotFoundError' ? 'No microphone found.' : 'Mic error: ' + e.message;
+    return false;
+  }
+  await listMics(); const tr = micStream.getAudioTracks()[0]; const lbl = tr.getSettings().deviceId;
+  if (lbl) [...$('micSel').options].forEach(o => { if (o.value === lbl) o.selected = true; });
+  tr.onended = () => { $('micMsg').textContent = 'Microphone disconnected. Pick another one.'; };
+  const ac = getAC(); micAn = ac.createAnalyser(); micAn.fftSize = 1024; ac.createMediaStreamSource(micStream).connect(micAn);
+  $('micMsg').textContent = '✓ ' + (tr.label || 'Microphone on'); $('micOn').textContent = 'Microphone on'; return true;
+}
+if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) navigator.mediaDevices.addEventListener('devicechange', () => { if (micStream) listMics(); });
+$('micOn').onclick = openMic;
+$('micSel').onchange = () => { localStorage.setItem('kd-mic', $('micSel').value); openMic(); };
+['cNs', 'cEc', 'cAgc'].forEach(id => $(id).onchange = () => micStream && openMic());
+const mctx = $('meter').getContext('2d'); const mbuf = new Float32Array(1024);
+function meterTick() {
+  mctx.clearRect(0, 0, 360, 14); if (!micAn) return; micAn.getFloatTimeDomainData(mbuf);
+  let sum = 0, pk = 0; for (const v of mbuf) { sum += v * v; pk = Math.max(pk, Math.abs(v)); }
+  const rms = Math.sqrt(sum / mbuf.length), db = 20 * Math.log10(rms + 1e-9); micPeak = Math.max(pk, micPeak * 0.97);
+  const w = clamp((db + 60) / 60) * 360; mctx.fillStyle = pk > 0.98 ? '#f85149' : db > -12 ? '#d29922' : '#3fb950'; mctx.fillRect(0, 0, w, 14);
+  mctx.fillStyle = '#fff'; mctx.fillRect(clamp((20 * Math.log10(micPeak + 1e-9) + 60) / 60) * 356, 0, 3, 14);
+  $('meterMsg').textContent = pk > 0.98 ? 'Clipping: lower your input gain or move back' : db < -45 ? 'Too quiet: move closer to the mic' : `Level ${db.toFixed(0)} dB · good`;
+}
+function prompterTick() {
+  const i = SREC ? (SREC.i === 'full' ? sceneAt(t) : SREC.i) : selScene, s = SC[i]; if (!s) return;
+  const L = t - starts[i], wi = (SREC || playing) && sceneAt(t) === i ? curWord(s, L) : -1;
+  const key = i + ':' + wi; if (prompterTick.k === key) return; prompterTick.k = key;
+  $('prompter').innerHTML = `<b>${s.i + 1}. ${s.name}</b><br>` + s.words.map((w, k) => `<span class="${k === wi ? 'cw' : k > wi && wi >= 0 ? 'pw' : ''}">${w.w.replace(/</g, '')}</span>`).join(' ');
+}
+function renderTakes() {
+  $('takeRows').innerHTML = SC.map(s => {
+    const tk = MINE.takes[s.i], len = tk ? tk.duration - ($('cTrim').checked ? trimStart(tk) : 0) : 0, over = tk && len > s.dur + 0.6;
+    const st = tk ? (over ? `<span class="st-warn">⚠ ${len.toFixed(1)}s</span>` : `<span class="st-ok">✓ ${len.toFixed(1)}s</span>`) : MINE.full ? '<span class="st-ok">full take</span>' : '<span class="st-bad">✗</span>';
+    return `<tr data-i="${s.i}" class="${s.i === selScene ? 'sel' : ''}"><td>${s.i + 1}</td><td>${s.name.replace(/</g, '')}</td><td>${s.dur.toFixed(1)}s</td><td>${st}</td><td>${tk ? `<button data-a="play">▶</button><button data-a="del">✕</button>` : ''}${over ? '<button data-a="fit">Fit</button>' : ''}</td></tr>`;
+  }).join('');
+}
+$('takeRows').onclick = e => {
+  const tr = e.target.closest('tr'); if (!tr) return; const i = +tr.dataset.i, a = e.target.dataset.a;
+  selScene = i; prompterTick.k = '';
+  if (a === 'play') { const ac = getAC(), src = ac.createBufferSource(); src.buffer = MINE.takes[i]; src.connect(ac.destination); src.start(); }
+  else if (a === 'del') { delete MINE.takes[i]; MINE.ready = false; }
+  else if (a === 'fit') { SC[i].fit = MINE.takes[i].duration - ($('cTrim').checked ? trimStart(MINE.takes[i]) : 0) + 0.6; retime(); toast(`Scene ${i + 1} extended to fit your take. Later scenes moved.`); MINE.ready = false; }
+  else { seekTo(starts[i]); }
+  renderTakes();
+};
+async function countdown() { const c = $('count'); c.hidden = false; for (const n of [3, 2, 1]) { c.textContent = n; await new Promise(r => setTimeout(r, 800)); } c.hidden = true; }
+async function startStudioRec(which) {
+  if (REC || SREC) return; if (!micStream && !(await openMic())) return;
+  const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m));
+  if (!mime) return toast('Audio recording is not supported in this browser');
+  setPlaying(false); seekTo(which === 'full' ? 0 : starts[which]); ccForce = true; await countdown();
+  const mr = new MediaRecorder(micStream, { mimeType: mime }), parts = [];
+  mr.ondataavailable = e => e.data.size && parts.push(e.data);
+  SREC = { i: which, mr, end: which === 'full' ? TOTAL : starts[which] + SC[which].dur + 0.3 };
+  mr.onstart = () => { playing = true; last = performance.now(); $('bPlay').textContent = '❚❚ Pause'; };
+  mr.onstop = async () => {
+    const was = SREC; SREC = null; ccForce = false; playing = false; $('bPlay').textContent = '▶ Play'; $('recStop').disabled = true;
+    try {
+      const buf = await getAC().decodeAudioData(await new Blob(parts, { type: mime }).arrayBuffer());
+      if (was.i === 'full') { MINE.full = buf; toast(`Full take recorded (${buf.duration.toFixed(1)} s)`); }
+      else { MINE.takes[was.i] = buf; toast(`Scene ${was.i + 1} take recorded (${buf.duration.toFixed(1)} s)`); if (was.i + 1 < SC.length) selScene = was.i + 1; }
+      MINE.ready = false; renderTakes();
+    } catch (e) { toast('Could not decode the recording: ' + e.message); }
+  };
+  $('recStop').disabled = false; mr.start(250);
+}
+function studioTick() { if (t >= SREC.end - 0.001 || (SREC.i === 'full' && t >= TOTAL - 0.01)) stopStudioRec(); }
+function stopStudioRec() { if (SREC && SREC.mr.state !== 'inactive') SREC.mr.stop(); }
+$('recScene').onclick = () => startStudioRec(selScene);
+$('recFull').onclick = () => startStudioRec('full');
+$('recStop').onclick = stopStudioRec;
+$('upAudio').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const buf = await getAC().decodeAudioData(await f.arrayBuffer()); MINE.full = buf; MINE.ready = false; renderTakes();
+    const diff = buf.duration - TOTAL;
+    $('upMsg').innerHTML = `${f.name.replace(/</g, '')}: ${buf.duration.toFixed(2)} s · video ${TOTAL.toFixed(2)} s` + (Math.abs(diff) > 0.3 ? ` <br><button id="stretch">Stretch visuals to audio</button> <button id="keep">Keep timings</button>` : ' · ✓ lengths match');
+    if ($('stretch')) { $('stretch').onclick = () => { STRETCH = STRETCH * buf.duration / TOTAL; retime(); $('upMsg').textContent = `Visuals stretched to ${TOTAL.toFixed(2)} s`; renderTakes(); }; $('keep').onclick = () => { $('upMsg').textContent = 'Keeping the original timings'; }; }
+  } catch (err) { $('upMsg').textContent = 'Could not read that audio file: ' + err.message; }
+  e.target.value = '';
+};
+function trimStart(buf) {
+  const d = buf.getChannelData(0), th = Math.pow(10, -45 / 20), pad = Math.round(0.08 * buf.sampleRate); let k = 0;
+  while (k < d.length && Math.abs(d[k]) < th) k++; return Math.max(0, k - pad) / buf.sampleRate;
+}
+$('merge').onclick = async () => {
+  if (!MINE.full && !Object.keys(MINE.takes).length) return toast('Record a take or upload audio first');
+  const SR = 48000, len = Math.ceil(TOTAL * SR), off = new OfflineAudioContext(1, len, SR), nudge = (+$('nudge').value || 0) / 1000;
+  const place = (buf, at, from = 0, until) => {
+    const src = off.createBufferSource(); src.buffer = buf; const g = off.createGain(); src.connect(g); g.connect(off.destination);
+    const st = Math.max(0, at + nudge), dur = Math.max(0, (until !== undefined ? until : buf.duration) - from);
+    g.gain.setValueAtTime(0, st); g.gain.linearRampToValueAtTime(1, st + 0.01); g.gain.setValueAtTime(1, Math.max(st + 0.01, st + dur - 0.01)); g.gain.linearRampToValueAtTime(0, st + dur);
+    src.start(st, from, dur);
+  };
+  if (MINE.full) {
+    let segStart = 0;
+    SC.forEach(s => { if (MINE.takes[s.i]) { if (starts[s.i] > segStart) place(MINE.full, segStart, segStart, Math.min(starts[s.i], MINE.full.duration)); segStart = starts[s.i] + s.dur; } });
+    if (segStart < MINE.full.duration) place(MINE.full, segStart, segStart, MINE.full.duration);
+  }
+  Object.entries(MINE.takes).forEach(([i, b]) => { const from = $('cTrim').checked ? trimStart(b) : 0; place(b, starts[i], from, Math.min(b.duration, from + SC[i].dur + 0.3)); });
+  const out = await off.startRendering(), d = out.getChannelData(0);
+  let pk = 0; for (let k = 0; k < d.length; k++) pk = Math.max(pk, Math.abs(d[k]));
+  const clipped = pk >= 0.999;
+  if ($('cNorm').checked && pk > 0) { const g = Math.pow(10, -1 / 20) / pk; for (let k = 0; k < d.length; k++) d[k] *= g; }
+  const rmsWin = (a, b) => { const i0 = Math.floor(a * SR), i1 = Math.min(d.length, Math.floor(b * SR)); let s = 0; for (let k = i0; k < i1; k++) s += d[k] * d[k]; return 20 * Math.log10(Math.sqrt(s / Math.max(1, i1 - i0)) + 1e-9); };
+  const missing = SC.filter(s => s.words.length && rmsWin(starts[s.i], starts[s.i] + s.dur) < -50).map(s => s.i + 1);
+  const overs = SC.filter(s => MINE.takes[s.i] && MINE.takes[s.i].duration - ($('cTrim').checked ? trimStart(MINE.takes[s.i]) : 0) > s.dur + 0.6).map(s => s.i + 1);
+  const avg = rmsWin(0, TOTAL);
+  MINE.buf = out; if (MINE.url) URL.revokeObjectURL(MINE.url); MINE.url = URL.createObjectURL(wavBlob(out)); mineEl.src = MINE.url;
+  MINE.ready = !missing.length && !overs.length && avg > -35;
+  const row = (ok, txt) => `<div class="${ok ? 'st-ok' : 'st-bad'}">${ok ? '✓' : '✗'} ${txt}</div>`;
+  $('checks').innerHTML = row(!missing.length, missing.length ? `Silent scenes: ${missing.slice(0, 12).join(', ')}${missing.length > 12 ? '…' : ''}` : 'Every narrated scene has voice') +
+    row(!overs.length, overs.length ? `Takes longer than their scene: ${overs.join(', ')} (click Fit in the table)` : 'No take runs past its scene') +
+    row(!clipped, clipped ? 'Clipping detected: re-record those parts a little quieter' : 'No clipping') +
+    row(avg > -35, `Average level ${avg.toFixed(1)} dBFS${avg > -35 ? '' : ' (too quiet)'}`) +
+    row(Math.abs(out.duration - TOTAL) < 0.1, `Length ${out.duration.toFixed(2)} s = video ${TOTAL.toFixed(2)} s`) +
+    `<p class="hint">${MINE.ready ? '✅ Ready. "Custom voice-over" is now the default in Download video.' : 'Fix the ✗ items (or record the missing scenes) to enable the custom-voice download. You can still preview.'}</p>`;
+  $('useMine').disabled = false; $('wav').disabled = false; toast('Voice-over merged');
+};
+$('useMine').onclick = () => { audioMode = audioMode === 'mine' ? 'default' : 'mine'; $('useMine').textContent = audioMode === 'mine' ? '🔊 Back to default voice' : '▶ Preview with my voice'; if (playing) restartSpeech(); if (audioMode === 'mine' && !playing) setPlaying(true); };
+$('wav').onclick = () => MINE.buf && saveBlob(wavBlob(MINE.buf), FILE + '-voiceover.wav');
+function wavBlob(buf) {
+  const d = buf.getChannelData(0), n = d.length, ab = new ArrayBuffer(44 + n * 2), v = new DataView(ab), sr = buf.sampleRate;
+  const ws = (o, s) => { for (let k = 0; k < s.length; k++) v.setUint8(o + k, s.charCodeAt(k)); };
+  ws(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); ws(8, 'WAVE'); ws(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); ws(36, 'data'); v.setUint32(40, n * 2, true);
+  for (let k = 0; k < n; k++) v.setInt16(44 + k * 2, Math.max(-1, Math.min(1, d[k])) * 0x7fff, true);
+  return new Blob([ab], { type: 'audio/wav' });
+}
+
+/* =================== Download video =================== */
+function pickMime() { return ['video/mp4;codecs=avc1.640028,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'].find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)); }
+$('bDl').onclick = () => {
+  const mineOk = !!(MINE.buf && MINE.ready), mineAny = !!MINE.buf;
+  const opts = [
+    ['mine', 'Custom voice-over (Voice Studio)', mineOk ? 'Your merged voice, perfectly in sync. Recommended.' : mineAny ? 'Merged, but the readiness checklist has ✗ items. Allowed, but check them first.' : 'Not available yet: record or upload in Voice Studio, then Merge.', mineAny],
+    ['default', 'Default voice (browser speech)', 'Uses tab-audio capture: pick "This tab" and tick "Also share tab audio". Not every browser lets this voice be recorded; if no sound is captured the export stops and tells you.', !!synth],
+    ['none', 'No voice (captions only)', 'Always works. Good for muted feeds, or to add audio later in an editor.', true],
+  ];
+  const def = mineOk ? 'mine' : synth ? 'default' : 'none';
+  $('dlOpts').innerHTML = opts.map(([v, l, d, en]) => `<label class="opt${en ? '' : ' dis'}"><input type="radio" name="dla" value="${v}"${v === def ? ' checked' : ''}${en ? '' : ' disabled'}><span><b>${l}</b><small>${d}</small></span></label>`).join('');
+  const m = pickMime();
+  $('dlInfo').innerHTML = !m ? '⚠ This browser cannot record video (MediaRecorder unavailable). Use desktop Chrome or Edge.' :
+    `Records in real time: about <b>${Math.ceil(TOTAL / 60)} min</b>. Keep this tab visible. Format: <b>${m.includes('mp4') ? 'MP4' : 'WebM'}</b>.` +
+    (m.includes('mp4') ? '' : `<br>To convert to MP4: <code>ffmpeg -i ${FILE}.webm -c:v libx264 -crf 18 -pix_fmt yuv420p -c:a aac -movflags +faststart ${FILE}.mp4</code>`) +
+    `<br>Merge your own audio later: <code>ffmpeg -i ${FILE}-captions.mp4 -i voiceover.wav -map 0:v -map 1:a -c:v copy -c:a aac -shortest ${FILE}.mp4</code>`;
+  $('dlGo').disabled = !m; $('dlModal').hidden = false;
+};
+$('dlCancel').onclick = () => { $('dlModal').hidden = true; };
+$('dlGo').onclick = () => { const a = (document.querySelector('input[name=dla]:checked') || {}).value || 'none'; $('dlModal').hidden = true; exportVideo({ audio: a, fps: +$('dlFps').value, br: +$('dlBr').value, cc: $('dlCC').checked }); };
+async function exportVideo(opt) {
+  const mime = pickMime(); if (!mime || !cv.captureStream) return toast('Video export needs desktop Chrome or Edge');
+  setPlaying(false); stopSpeech(); if (SREC) return;
+  const stream = cv.captureStream(opt.fps); let ac = null, src = null, disp = null, an = null;
+  if (opt.audio === 'mine') {
+    ac = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 }); const dest = ac.createMediaStreamDestination();
+    src = ac.createBufferSource(); src.buffer = MINE.buf; src.connect(dest); stream.addTrack(dest.stream.getAudioTracks()[0]);
+  } else if (opt.audio === 'default') {
+    try { disp = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: { suppressLocalAudioPlayback: false }, preferCurrentTab: true, selfBrowserSurface: 'include', systemAudio: 'include' }); }
+    catch (e) { return toast('Sharing was cancelled. Nothing recorded.'); }
+    const at = disp.getAudioTracks()[0];
+    if (!at) { disp.getTracks().forEach(x => x.stop()); return toast('No tab audio was shared. Choose "This tab" with "Also share tab audio", or use Voice Studio / captions only.', 6000); }
+    stream.addTrack(at); ac = new (window.AudioContext || window.webkitAudioContext)(); an = ac.createAnalyser(); an.fftSize = 2048; ac.createMediaStreamSource(new MediaStream([at])).connect(an);
+  }
+  const mr = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: opt.br * 1e6, audioBitsPerSecond: 192000 }), parts = [];
+  mr.ondataavailable = e => e.data.size && parts.push(e.data);
+  const ccWas = ccOn; ccOn = opt.cc;
+  REC = { opt, mr, ac, an, disp, parts, peak: 0, cancel: false, ccWas, clock: () => 0, firstVoice: (starts[SC.findIndex(s => s.words.length)] || 0) + 9 };
+  t = 0; cur = -1; $('recbar').hidden = false;
+  await new Promise(r => { mr.onstart = r; mr.start(1000); });
+  if (src) { const t0 = ac.currentTime + 0.05; src.start(t0); REC.clock = () => Math.max(0, ac.currentTime - t0); }
+  else { const p0 = performance.now(); REC.clock = () => (performance.now() - p0) / 1000; }
+  mr.onstop = () => {
+    const r = REC; finishRec();
+    if (r.cancel) return toast(r.reason || 'Recording cancelled', r.reason ? 7000 : 2600);
+    const ext = mime.includes('mp4') ? 'mp4' : 'webm', tag = r.opt.audio === 'mine' ? 'custom-voice' : r.opt.audio === 'default' ? 'default-voice' : 'captions';
+    saveBlob(new Blob(parts, { type: mime.split(';')[0] }), `${FILE}-${tag}.${ext}`);
+    toast(`✓ Saved ${FILE}-${tag}.${ext} (audio: ${tag.replace('-', ' ')})`, 6000);
+  };
+}
+const abuf = new Float32Array(2048);
+function recTick() {
+  const r = REC; $('recTxt').textContent = `Recording ${fmt(t)} / ${fmt(TOTAL)} (${Math.floor(t / TOTAL * 100)}%) · ${r.opt.audio === 'mine' ? 'your voice' : r.opt.audio === 'default' ? 'default voice' : 'captions only'} · keep this tab visible`;
+  if (r.an) { r.an.getFloatTimeDomainData(abuf); let pk = 0; for (const v of abuf) pk = Math.max(pk, Math.abs(v)); r.peak = Math.max(r.peak, pk);
+    if (t > r.firstVoice && r.peak < 0.01) { r.reason = 'Your browser did not allow the default voice to be recorded (no sound captured). Record your voice in Voice Studio, upload a TTS file, or download with captions only.'; cancelRec(); return; } }
+  if (t >= TOTAL - 0.02 && r.mr.state === 'recording') r.mr.stop();
+}
+function cancelRec() { if (!REC) return; REC.cancel = true; if (REC.mr.state !== 'inactive') REC.mr.stop(); else finishRec(); }
+function finishRec() {
+  const r = REC; if (!r) return; REC = null; stopSpeech(); ccOn = r.ccWas;
+  if (r.disp) r.disp.getTracks().forEach(x => x.stop()); if (r.ac) r.ac.close().catch(() => {});
+  $('recbar').hidden = true; playing = false; $('bPlay').textContent = '▶ Play';
+}
+$('recCancel').onclick = cancelRec;
+
+/* =================== init & automation hooks =================== */
+retime();
+$('ttl').textContent = `${D.title} · ${fmt(TOTAL)} · ${PHASES.length} steps`;
+document.title = `${D.title} · kona-srinivas-gate`;
+window.__reel = { id: D.id, total: TOTAL, width: W, height: H, fps: 30, scenes: SC.map(s => ({ name: s.name, type: s.type, start: starts[s.i], dur: s.dur, words: s.words.length })), phases: PHASES.length };
+window.__frameAt = (sec, type = 'image/jpeg', q = 0.92) => { draw(sec); return cv.toDataURL(type, q); };
+window.__overflow = () => [...OVER.values()];
+window.__drawAll = () => { SC.forEach(s => draw(starts[s.i] + s.dur - 0.05)); return [...OVER.values()]; };
+draw(0); requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -5,3 +5,5 @@
 *.wav
 node_modules/
 frames/
+videos/qa/
+__pycache__/
