@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Module 3 — Calculus | GATE 2027</title>
+<style>
+:root{--bg:#0f1420;--panel:#171e2e;--panel2:#1e2739;--line:#2b3651;--ink:#e8edf7;
+ --dim:#95a3bd;--accent:#ff9f5a;--gold:#ffc766;--green:#5fd39a;--red:#ff7a7a;
+ --cyan:#5dd8f2;--violet:#b48bff}
+@media(prefers-color-scheme:light){:root{--bg:#f4f6fb;--panel:#fff;--panel2:#eef2f9;
+ --line:#d6deec;--ink:#16203a;--dim:#5a6b89;--accent:#c2560a;--gold:#9a6400;
+ --green:#1b7f52;--red:#c0392b;--cyan:#0a7ea4;--violet:#6f42c1}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.68;
+ font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Segoe UI,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:28px 20px 90px}
+a.back{color:var(--accent);text-decoration:none;font-size:14px}
+h1{font-size:clamp(26px,5vw,38px);margin:14px 0 6px}
+.lead{color:var(--dim);font-size:16.5px;margin-top:0}
+h2{font-size:22px;margin:40px 0 12px;padding-top:14px;border-top:1px solid var(--line)}
+h3{font-size:17px;margin:26px 0 8px;color:var(--accent)}
+p{font-size:15.5px}
+.m{font-family:"Latin Modern Math",Cambria Math,Georgia,serif;font-style:italic}
+table{width:100%;border-collapse:collapse;font-size:14.5px;margin:14px 0}
+th,td{padding:8px 11px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--accent);font-size:12px;text-transform:uppercase;letter-spacing:.7px}
+.demo{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:20px;margin:22px 0}
+.demo h4{margin:0 0 4px;font-size:15px;color:var(--gold)}
+.demo .cap{color:var(--dim);font-size:13.5px;margin:0 0 14px}
+button{background:var(--accent);color:#fff;border:0;padding:8px 17px;border-radius:9px;
+ font-weight:650;font-size:14px;cursor:pointer;font-family:inherit}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+button:hover{filter:brightness(1.12)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.note{border-left:3px solid var(--gold);background:var(--panel2);padding:13px 17px;
+ border-radius:0 10px 10px 0;margin:16px 0;font-size:14.5px}
+.note b{color:var(--gold)}
+.warn{border-left-color:var(--red)}.warn b{color:var(--red)}
+.prob{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--violet);
+ border-radius:0 14px 14px 0;padding:20px;margin:22px 0}
+.prob .ttl{font-weight:700;color:var(--violet);font-size:14px;letter-spacing:.4px}
+details{margin-top:10px}summary{cursor:pointer;color:var(--cyan);font-size:14px;font-weight:600}
+.ans{background:var(--panel2);border-radius:10px;padding:14px 17px;margin-top:10px;font-size:14.5px}
+svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.anim-note{font-size:13px;color:var(--dim);margin-top:10px;font-style:italic}
+.eq{text-align:center;font-size:17px;margin:16px 0}
+ul li,ol li{font-size:15.5px;margin:5px 0}
+</style>
+</head>
+<body><div class="wrap">
+<a class="back" href="index.html">← All modules</a>
+<h1>Module 3 · Calculus</h1>
+<p class="lead">The mathematics of change (differential) and accumulation (integral). The
+Fundamental Theorem reveals these two to be inverse operations — arguably the single most
+important fact in the subject.</p>
+
+<h2>3.1 Limits</h2>
+<p><span class="m">lim<sub>x→a</sub> f(x) = L</span> means we can force f(x) as close to L as we
+like by taking x close enough to a — <b>without ever setting x = a</b>. The value
+<span class="m">f(a)</span> is irrelevant to the limit; it may differ, or not exist at all.</p>
+<div class="note"><b>The ε–δ definition as a game.</b> You name a tolerance ε around L.
+I must supply a window δ around a that keeps the whole curve inside your tolerance.
+If I can always answer, the limit exists.</div>
+<p><b>Existence:</b> the limit exists <b>iff</b> the left-hand and right-hand limits both exist
+<b>and are equal</b>.</p>
+
+<div class="demo">
+<h4>▶ Diagram D3.1 · The tolerance game</h4>
+<p class="cap">Shrink ε and watch a narrower δ keep the curve trapped inside the band.</p>
+<svg viewBox="0 0 440 260" id="eps"></svg>
+<div class="row"><label style="font-size:13.5px">ε = <b id="epsval">0.8</b></label>
+<input id="epsr" type="range" min="0.08" max="1.2" step="0.02" value="0.8" style="flex:1;accent-color:#ff9f5a"></div>
+<p class="anim-note" id="epsout"></p>
+</div>
+
+<h3>Techniques, in the order you should try them</h3>
+<ol>
+<li><b>Direct substitution</b> — if f is continuous at a, you are done.</li>
+<li><b>Factor and cancel</b> for 0/0.</li>
+<li><b>Rationalise</b> when roots appear.</li>
+<li><b>Standard limits</b> (memorise):
+<span class="m">sin x / x → 1</span>, <span class="m">tan x / x → 1</span>,
+<span class="m">(1−cos x)/x² → ½</span>, <span class="m">(eˣ−1)/x → 1</span>,
+<span class="m">ln(1+x)/x → 1</span>, <span class="m">(1+x)<sup>1/x</sup> → e</span>.</li>
+<li><b>L'Hôpital's rule</b> — only for <span class="m">0/0</span> and <span class="m">∞/∞</span>.</li>
+<li><b>Squeeze theorem</b> — for oscillating functions.</li>
+<li><b>Taylor expansion</b> — often faster than repeated L'Hôpital.</li>
+</ol>
+<div class="note warn"><b>Trap #11.</b> Applying L'Hôpital to a determinate form such as
+<span class="m">1/0</span> produces nonsense. Other indeterminates
+(<span class="m">0·∞</span>, <span class="m">∞−∞</span>, <span class="m">1<sup>∞</sup></span>)
+must first be rearranged into 0/0 or ∞/∞.</div>
+
+<h3>Continuity and differentiability</h3>
+<p>f is continuous at a iff three things hold: f(a) is defined, the limit exists, and they
+are equal. Informally — you can draw through a without lifting your pen.</p>
+<p class="eq m">f′(a) = lim<sub>h→0</sub> [ f(a+h) − f(a) ] / h</p>
+<div class="note warn"><b>The one-way implication (trap #9).</b> Differentiable ⟹ continuous.
+The converse is <b>false</b>. <span class="m">|x|</span> is continuous everywhere but not
+differentiable at 0, because the left derivative is −1 and the right is +1. Corners, cusps,
+vertical tangents and jumps all destroy differentiability.</div>
+
+<div class="demo">
+<h4>▶ Animation A3.1 · Secant becoming tangent</h4>
+<p class="cap">Q slides toward P. Watch the secant pivot into the tangent as h → 0.
+Then switch to <span class="m">|x|</span> and watch the two sides refuse to agree.</p>
+<svg viewBox="0 0 440 280" id="sec"></svg>
+<div class="row"><button id="secrun">Animate h → 0</button>
+<button class="ghost" id="secabs">Switch to |x|</button></div>
+<p class="anim-note" id="secout"></p>
+</div>
+
+<div class="prob">
+<div class="ttl">PROBLEM 3.1 · 1 mark</div>
+<p>Evaluate <span class="m">lim<sub>x→0</sub> (√(1+x) − 1) / x</span></p>
+<details><summary>Show solution</summary><div class="ans">
+<p><b>Method A — rationalise.</b> Multiply by the conjugate:</p>
+<p class="m" style="text-align:center">[(1+x) − 1] / [x(√(1+x)+1)] = 1 / (√(1+x)+1) → 1/2</p>
+<p><b>Method B — L'Hôpital.</b> The form is 0/0; differentiating gives
+<span class="m">1/(2√(1+x)) → 1/2</span>.</p>
+<p><b>Answer: ½.</b> <i>Numerically confirmed: 0.49988 at x = 10⁻³, 0.4999999 at x = 10⁻⁶.</i> ∎</p>
+</div></details>
+</div>
+
+<div class="prob">
+<div class="ttl">PROBLEM 3.2 · 2 marks</div>
+<p>Find a, b making <span class="m">f(x) = x²</span> for x ≤ 1 and
+<span class="m">ax + b</span> for x &gt; 1 differentiable at x = 1.</p>
+<details><summary>Show solution</summary><div class="ans">
+<p><b>Continuity first:</b> left value 1, right limit a + b, so <span class="m">a + b = 1</span>.</p>
+<p><b>Then differentiability:</b> left derivative 2, right derivative a, so <span class="m">a = 2</span>.</p>
+<p>Hence <b>a = 2, b = −1</b>. Continuity is a <i>prerequisite</i> — solving only the derivative
+condition is the classic error here. ∎</p>
+</div></details>
+</div>
+
+<h2>3.2 Maxima, Minima and the Mean Value Theorem</h2>
+<p>A <b>critical point</b> is where <span class="m">f′ = 0</span> or f′ fails to exist. Extrema
+occur <b>only</b> at critical points or interval endpoints.</p>
+<table>
+<tr><th>Test</th><th>Condition</th><th>Conclusion</th></tr>
+<tr><td>First derivative</td><td>f′ changes + → −</td><td>local <b>maximum</b></td></tr>
+<tr><td>First derivative</td><td>f′ changes − → +</td><td>local <b>minimum</b></td></tr>
+<tr><td>Second derivative</td><td class="m">f″(c) &gt; 0</td><td>local minimum (concave up)</td></tr>
+<tr><td>Second derivative</td><td class="m">f″(c) &lt; 0</td><td>local maximum (concave down)</td></tr>
+<tr><td>Second derivative</td><td class="m">f″(c) = 0</td><td style="color:var(--red)"><b>inconclusive</b> — fall back to the first test</td></tr>
+</table>
+<div class="note warn"><b>Trap #10.</b> For absolute extrema on [a,b], evaluate f at every critical
+point <b>and at both endpoints</b>. Forgetting the endpoints is the most commonly lost mark
+in this topic.</div>
+
+<div class="demo">
+<h4>▶ Diagram D3.4 · The three-graph stack</h4>
+<p class="cap">The best study aid in this module. Dashed guides show that f′ crosses zero
+exactly where f peaks or troughs, and f″ crosses zero exactly at f's inflection.</p>
+<svg viewBox="0 0 440 420" id="stack"></svg>
+</div>
+
+<h3>Mean value theorems</h3>
+<p><b>Rolle:</b> if f is continuous on [a,b], differentiable on (a,b), and
+<span class="m">f(a) = f(b)</span>, then some c has <span class="m">f′(c) = 0</span>.
+<i>Return to the same height and you must have levelled off somewhere.</i></p>
+<p><b>Lagrange (LMVT):</b> drop the equal-endpoints condition; then some c satisfies</p>
+<p class="eq m">f′(c) = [ f(b) − f(a) ] / (b − a)</p>
+<p><i>At some instant your speedometer read exactly your average speed.</i></p>
+
+<div class="demo">
+<h4>▶ Diagram D3.5 · MVT — tangent parallel to chord</h4>
+<p class="cap">Drag the interval. The red tangent at c is always parallel to the blue chord.</p>
+<svg viewBox="0 0 440 260" id="mvt"></svg>
+<div class="row"><label style="font-size:13.5px">b = <b id="bval">3.0</b></label>
+<input id="bslide" type="range" min="1.6" max="4" step="0.05" value="3" style="flex:1;accent-color:#ff9f5a"></div>
+<p class="anim-note" id="mvtout"></p>
+</div>
+<div class="note warn"><b>Every hypothesis matters.</b> <span class="m">|x|</span> on [−1,1]
+satisfies f(−1) = f(1) yet has no point with f′ = 0, because differentiability fails at 0.
+GATE loves exactly this counterexample.</div>
+
+<div class="prob">
+<div class="ttl">PROBLEM 3.3 · 2 marks</div>
+<p>Classify the local extrema of <span class="m">f(x) = x³ − 3x + 2</span>, then find the
+absolute extrema on [−2, 2].</p>
+<details><summary>Show full solution</summary><div class="ans">
+<p><b>Step 1 — critical points.</b> <span class="m">f′ = 3x² − 3 = 0 → x = ±1</span>.</p>
+<p><b>Step 2 — classify with f″ = 6x.</b> f″(−1) = −6 &lt; 0 → local <b>maximum</b>, f(−1) = 4.
+f″(1) = 6 &gt; 0 → local <b>minimum</b>, f(1) = 0.</p>
+<p><b>Step 3 — endpoints.</b> f(−2) = 0 and f(2) = 4.</p>
+<p><b>Step 4 — compare the whole list</b> {0, 4, 0, 4} <i>(all four machine-verified)</i>.</p>
+<p><b>Absolute maximum = 4</b>, at both x = −1 and x = 2.
+<b>Absolute minimum = 0</b>, at both x = −2 and x = 1. Inflection at x = 0. ∎</p>
+</div></details>
+</div>
+
+<h2>3.3 Integration</h2>
+<p>Two apparently unrelated definitions turn out to be one.</p>
+<ul>
+<li><b>Indefinite integral:</b> the antiderivative, <span class="m">∫f dx = F(x) + C</span>.
+The +C exists because differentiation destroys constants.</li>
+<li><b>Definite integral:</b> signed area, defined as a limit of rectangle sums. Area below
+the axis counts as negative.</li>
+</ul>
+<div class="note"><b>Fundamental Theorem of Calculus.</b>
+Part 1: <span class="m">d/dx ∫<sub>a</sub><sup>x</sup> f(t)dt = f(x)</span> — accumulate then
+differentiate and you are back where you started.
+Part 2: <span class="m">∫<sub>a</sub><sup>b</sup> f = F(b) − F(a)</span> — this is what makes
+integration tractable at all.</div>
+
+<div class="demo">
+<h4>▶ Animation A3.3 · Rectangles becoming area</h4>
+<p class="cap">Slide n upward. The staircase melts into the smooth region and the sum
+converges on the exact value.</p>
+<svg viewBox="0 0 440 240" id="riem"></svg>
+<div class="row">
+ <label style="font-size:13.5px">n = <b id="nval">4</b></label>
+ <input id="nslide" type="range" min="2" max="80" value="4" style="flex:1;accent-color:#ff9f5a">
+ <select id="rule" style="background:var(--panel);color:var(--ink);border:1px solid var(--line);
+  border-radius:8px;padding:6px 10px;font-size:13.5px;font-family:inherit">
+  <option value="l">Left</option><option value="r">Right</option>
+  <option value="m" selected>Midpoint</option></select>
+</div>
+<p class="anim-note" id="riemout"></p>
+</div>
+
+<h3>Integration by parts and ILATE</h3>
+<p class="eq m">∫ u dv = uv − ∫ v du</p>
+<p>Choose u by <b>ILATE</b> — <b>I</b>nverse trig, <b>L</b>ogarithmic, <b>A</b>lgebraic,
+<b>T</b>rigonometric, <b>E</b>xponential — taking whichever appears earliest, because it
+simplifies on differentiation.</p>
+
+<h3>The symmetry shortcut</h3>
+<p>Over a symmetric interval [−a, a]: an <b>even</b> function gives
+<span class="m">2∫₀ᵃ f</span>; an <b>odd</b> function gives <b>0</b>. Spotting an odd integrand
+reduces a hard integral to one line.</p>
+
+<div class="demo">
+<h4>▶ Animation A3.5 · Odd-function cancellation</h4>
+<p class="cap">Press play. The negative region rotates about the origin and annihilates the
+positive one exactly.</p>
+<svg viewBox="0 0 440 210" id="odd"></svg>
+<div class="row"><button id="oddgo">Cancel</button><button class="ghost" id="oddreset">Reset</button>
+<span id="oddout" style="font-size:14px;font-weight:600"></span></div>
+</div>
+
+<div class="prob">
+<div class="ttl">PROBLEMS 3.5 – 3.8 · mixed</div>
+<p><b>3.5</b> <span class="m">∫₀¹ x²eˣ dx</span> &nbsp;·&nbsp;
+<b>3.6</b> <span class="m">∫₀<sup>π</sup> sin²x dx</span> &nbsp;·&nbsp;
+<b>3.7</b> <span class="m">∫₁<sup>e</sup> ln x dx</span> &nbsp;·&nbsp;
+<b>3.8</b> <span class="m">∫₋₂² (x³ + x cos x) dx</span></p>
+<details><summary>Show all solutions</summary><div class="ans">
+<p><b>3.5</b> By ILATE take u = x². First pass gives
+<span class="m">e − 2∫₀¹xeˣdx</span>; the inner integral is
+<span class="m">e − (e−1) = 1</span>. So the answer is <b>e − 2 ≈ 0.71828</b>.
+<i>Simpson's rule gives 0.7182818284590556 against e−2 = 0.7182818284590451 — agreement to
+13 significant digits.</i></p>
+<p><b>3.6</b> Use <span class="m">sin²x = (1 − cos2x)/2</span>, giving
+<span class="m">½[x − sin2x/2]₀<sup>π</sup></span> = <b>π/2 ≈ 1.5708</b>.
+<i>Simpson confirms 1.5707963267948966.</i> Sanity check: sin² averages ½ over a full period,
+and ½ × π = π/2 ✓</p>
+<p><b>3.7</b> By ILATE take u = ln x, giving
+<span class="m">[x ln x]₁<sup>e</sup> − [x]₁<sup>e</sup> = e − (e−1)</span> = <b>1</b>.
+<i>Simpson: 0.9999999999999947.</i></p>
+<p><b>3.8</b> Both terms are odd — <span class="m">(−x)³ = −x³</span> and
+<span class="m">(−x)cos(−x) = −x cos x</span> since cos is even. The interval is symmetric,
+so the answer is <b>0</b> with no antiderivative needed. ∎</p>
+</div></details>
+</div>
+
+<p style="margin-top:48px"><a class="back" href="m2-linear-algebra.html">← Module 2</a> &nbsp;·&nbsp;
+<a class="back" href="index.html">All modules</a> &nbsp;·&nbsp;
+<a class="back" href="m4-probability.html">Module 4: Probability →</a></p>
+</div>
+
+<script>
+/* ---- D3.1 epsilon-delta ---- */
+(function(){
+ const svg=document.getElementById('eps'),out=document.getElementById('epsout'),
+  sl=document.getElementById('epsr'),lv=document.getElementById('epsval');
+ const f=x=>1+0.6*x+0.25*x*x, a=1.5, L=f(a);
+ const X=x=>40+(x)*70, Y=y=>230-(y-1)*55;
+ function draw(){
+  const e=+sl.value;lv.textContent=e.toFixed(2);
+  // find delta numerically
+  let d=0.01;for(let t=0.01;t<1.6;t+=0.005){
+   if(Math.abs(f(a+t)-L)<e&&Math.abs(f(a-t)-L)<e)d=t;else break;}
+  let h=`<rect x="40" y="${Y(L+e)}" width="380" height="${Y(L-e)-Y(L+e)}"
+          fill="#ff9f5a" fill-opacity=".14"/>`;
+  h+=`<rect x="${X(a-d)}" y="20" width="${X(a+d)-X(a-d)}" height="215"
+       fill="#5dd8f2" fill-opacity=".16"/>`;
+  let p='';for(let x=0;x<=3.3;x+=0.05)p+=(p?'L':'M')+X(x)+' '+Y(f(x))+' ';
+  h+=`<path d="${p}" fill="none" stroke="currentColor" stroke-width="2.2"/>`;
+  h+=`<line x1="40" y1="${Y(L)}" x2="420" y2="${Y(L)}" stroke="#ff9f5a" stroke-dasharray="5 4"/>`;
+  h+=`<line x1="${X(a)}" y1="20" x2="${X(a)}" y2="235" stroke="#5dd8f2" stroke-dasharray="5 4"/>`;
+  h+=`<circle cx="${X(a)}" cy="${Y(L)}" r="5" fill="#ff9f5a"/>`;
+  h+=`<text x="${X(a)+8}" y="${Y(L)-10}" font-size="12" fill="#ff9f5a">L</text>`;
+  h+=`<text x="${X(a)-4}" y="252" font-size="12" fill="#5dd8f2">a</text>`;
+  svg.innerHTML=h;
+  out.innerHTML=`For ε = ${e.toFixed(2)} I can answer with δ ≈ <b style="color:#5dd8f2">${d.toFixed(3)}</b> — the curve stays trapped inside the orange band. The limit exists.`;
+ }
+ sl.oninput=draw;draw();
+})();
+
+/* ---- A3.1 secant to tangent ---- */
+(function(){
+ const svg=document.getElementById('sec'),out=document.getElementById('secout');
+ let abs=false,h0=1.6,timer=null;
+ const f=x=>abs?Math.abs(x-1.6)*1.4+0.6:0.35*x*x+0.4;
+ const X=x=>50+x*105,Y=y=>235-y*52;
+ function draw(h){
+  const a=abs?1.6:1.2;
+  let s='';for(let x=0;x<=3.4;x+=0.02)s+=(s?'L':'M')+X(x)+' '+Y(f(x))+' ';
+  let o=`<line x1="20" y1="235" x2="420" y2="235" stroke="currentColor" stroke-opacity=".25"/>
+   <path d="${s}" fill="none" stroke="currentColor" stroke-width="2.2"/>`;
+  const slope=(f(a+h)-f(a))/h;
+  const ext=1.5;
+  o+=`<line x1="${X(a-ext)}" y1="${Y(f(a)-slope*ext)}" x2="${X(a+ext)}" y2="${Y(f(a)+slope*ext)}"
+      stroke="${Math.abs(h)<0.05?'#ffc766':'#ff9f5a'}" stroke-width="${Math.abs(h)<0.05?3:2}"/>`;
+  o+=`<circle cx="${X(a)}" cy="${Y(f(a))}" r="5.5" fill="#5dd8f2"/>
+      <text x="${X(a)-16}" y="${Y(f(a))+20}" font-size="12" fill="#5dd8f2">P</text>`;
+  if(Math.abs(h)>0.05)o+=`<circle cx="${X(a+h)}" cy="${Y(f(a+h))}" r="5" fill="#b48bff"/>
+      <text x="${X(a+h)+8}" y="${Y(f(a+h))-8}" font-size="12" fill="#b48bff">Q</text>`;
+  svg.innerHTML=o;
+  out.innerHTML=abs
+   ? `h = ${h.toFixed(2)} → slope <b>${slope.toFixed(2)}</b>. From the right the slope is +1.4, from the left −1.4. <b style="color:#ff7a7a">They never meet — not differentiable.</b>`
+   : `h = ${h.toFixed(2)} → secant slope <b>${slope.toFixed(3)}</b>`+
+     (Math.abs(h)<0.05?` = <b style="color:#ffc766">f′(a), the tangent</b>`:'');
+ }
+ draw(h0);
+ document.getElementById('secrun').onclick=()=>{clearInterval(timer);let h=abs?-1.2:1.6;
+  timer=setInterval(()=>{h*=0.86;draw(h);if(Math.abs(h)<0.04)clearInterval(timer);},70);};
+ document.getElementById('secabs').onclick=e=>{abs=!abs;
+  e.target.textContent=abs?'Switch to smooth curve':'Switch to |x|';draw(abs?-1.2:1.6);};
+})();
+
+/* ---- D3.4 three-graph stack ---- */
+(function(){
+ const svg=document.getElementById('stack');
+ const f=x=>x**3-3*x+2, d1=x=>3*x*x-3, d2=x=>6*x;
+ const X=x=>60+(x+2.4)*78;
+ function panel(fn,oy,sc,col,lab,zeros){
+  let p='';for(let x=-2.4;x<=2.4;x+=0.04)p+=(p?'L':'M')+X(x)+' '+(oy-fn(x)*sc)+' ';
+  let h=`<line x1="40" y1="${oy}" x2="420" y2="${oy}" stroke="currentColor" stroke-opacity=".22"/>
+   <path d="${p}" fill="none" stroke="${col}" stroke-width="2.4"/>
+   <text x="44" y="${oy-52}" font-size="12.5" font-weight="700" fill="${col}">${lab}</text>`;
+  zeros.forEach(z=>{h+=`<circle cx="${X(z)}" cy="${oy-fn(z)*sc}" r="4.5" fill="${col}"/>`;});
+  return h;
+ }
+ let h='';
+ h+=panel(f,105,13,'#ff9f5a','f(x) = x³ − 3x + 2',[-1,1]);
+ h+=panel(d1,245,9,'#5dd8f2','f′(x) = 3x² − 3',[-1,1]);
+ h+=panel(d2,375,7,'#b48bff','f″(x) = 6x',[0]);
+ [-1,0,1].forEach(x=>{h+=`<line x1="${X(x)}" y1="40" x2="${X(x)}" y2="410"
+   stroke="currentColor" stroke-opacity=".18" stroke-dasharray="4 4"/>`;});
+ h+=`<text x="${X(-1)}" y="36" font-size="11" text-anchor="middle" fill="currentColor" opacity=".6">max</text>`;
+ h+=`<text x="${X(0)}" y="36" font-size="11" text-anchor="middle" fill="currentColor" opacity=".6">inflection</text>`;
+ h+=`<text x="${X(1)}" y="36" font-size="11" text-anchor="middle" fill="currentColor" opacity=".6">min</text>`;
+ svg.innerHTML=h;
+})();
+
+/* ---- D3.5 MVT ---- */
+(function(){
+ const svg=document.getElementById('mvt'),out=document.getElementById('mvtout'),
+  sl=document.getElementById('bslide'),bv=document.getElementById('bval');
+ const f=x=>x*x, a=1;
+ const X=x=>50+x*86,Y=y=>225-y*12.5;
+ function draw(){
+  const b=+sl.value;bv.textContent=b.toFixed(2);
+  const slope=(f(b)-f(a))/(b-a), c=slope/2;
+  let p='';for(let x=0.3;x<=4.3;x+=0.03)p+=(p?'L':'M')+X(x)+' '+Y(f(x))+' ';
+  let h=`<line x1="20" y1="225" x2="425" y2="225" stroke="currentColor" stroke-opacity=".25"/>
+   <path d="${p}" fill="none" stroke="currentColor" stroke-width="2.2"/>`;
+  h+=`<line x1="${X(a)}" y1="${Y(f(a))}" x2="${X(b)}" y2="${Y(f(b))}" stroke="#5dd8f2" stroke-width="2.6"/>`;
+  const e=0.85;
+  h+=`<line x1="${X(c-e)}" y1="${Y(f(c)-slope*e)}" x2="${X(c+e)}" y2="${Y(f(c)+slope*e)}"
+      stroke="#ff7a7a" stroke-width="2.8"/>`;
+  h+=`<circle cx="${X(a)}" cy="${Y(f(a))}" r="5" fill="#5dd8f2"/>
+      <circle cx="${X(b)}" cy="${Y(f(b))}" r="5" fill="#5dd8f2"/>
+      <circle cx="${X(c)}" cy="${Y(f(c))}" r="5.5" fill="#ff7a7a"/>
+      <text x="${X(c)}" y="${Y(f(c))+22}" font-size="12.5" fill="#ff7a7a" text-anchor="middle">c = ${c.toFixed(2)}</text>`;
+  svg.innerHTML=h;
+  out.innerHTML=`Average rate over [1, ${b.toFixed(2)}] = <b>${slope.toFixed(3)}</b>, and
+   f′(c) = 2c matches it at <b style="color:#ff7a7a">c = ${c.toFixed(3)}</b> — always the midpoint for x².
+   At b = 3 this gives exactly c = 2 <i>(verified)</i>.`;
+ }
+ sl.oninput=draw;draw();
+})();
+
+/* ---- A3.3 Riemann ---- */
+(function(){
+ const svg=document.getElementById('riem'),out=document.getElementById('riemout'),
+  sl=document.getElementById('nslide'),nv=document.getElementById('nval'),
+  rule=document.getElementById('rule');
+ const f=x=>0.6*x*x+0.5, a=0,b=3, exact=0.6*27/3+0.5*3;
+ const X=x=>50+x*120,Y=y=>205-y*28;
+ function draw(){
+  const n=+sl.value;nv.textContent=n;const dx=(b-a)/n;let sum=0,h='';
+  for(let i=0;i<n;i++){
+   const xl=a+i*dx;
+   const xs=rule.value==='l'?xl:rule.value==='r'?xl+dx:xl+dx/2;
+   const y=f(xs);sum+=y*dx;
+   h+=`<rect x="${X(xl)}" y="${Y(y)}" width="${X(dx)-X(0)+0.4}" height="${205-Y(y)}"
+        fill="#ff9f5a" fill-opacity=".3" stroke="#ff9f5a" stroke-opacity=".55"/>`;
+  }
+  let p='';for(let x=a;x<=b;x+=0.02)p+=(p?'L':'M')+X(x)+' '+Y(f(x))+' ';
+  h+=`<path d="${p}" fill="none" stroke="currentColor" stroke-width="2.4"/>
+      <line x1="40" y1="205" x2="425" y2="205" stroke="currentColor" stroke-opacity=".3"/>`;
+  svg.innerHTML=h;
+  const err=Math.abs(sum-exact);
+  out.innerHTML=`n = ${n} → sum = <b>${sum.toFixed(5)}</b> · exact = ${exact.toFixed(5)} ·
+   error = <b style="color:${err<0.01?'#5fd39a':'#ff9f5a'}">${err.toFixed(5)}</b>`;
+ }
+ sl.oninput=draw;rule.onchange=draw;draw();
+})();
+
+/* ---- A3.5 odd cancellation ---- */
+(function(){
+ const svg=document.getElementById('odd'),out=document.getElementById('oddout');
+ const f=x=>x*x*x*0.09;
+ const X=x=>220+x*85,Y=y=>105-y*45;
+ function draw(t){
+  let pl='',pr='';
+  for(let x=-2;x<=0;x+=0.04)pl+=(pl?'L':'M')+X(x)+' '+Y(f(x))+' ';
+  pl+=`L${X(0)} ${Y(0)} L${X(-2)} ${Y(0)} Z`;
+  for(let x=0;x<=2;x+=0.04)pr+=(pr?'L':'M')+X(x)+' '+Y(f(x))+' ';
+  pr+=`L${X(2)} ${Y(0)} L${X(0)} ${Y(0)} Z`;
+  let h=`<line x1="20" y1="105" x2="420" y2="105" stroke="currentColor" stroke-opacity=".3"/>
+    <line x1="220" y1="15" x2="220" y2="195" stroke="currentColor" stroke-opacity=".3"/>`;
+  h+=`<path d="${pr}" fill="#5dd8f2" fill-opacity=".35" stroke="#5dd8f2"/>`;
+  h+=`<g transform="rotate(${180*t} 220 105)"><path d="${pl}" fill="#ff7a7a"
+      fill-opacity="${.35*(1-t*0.6)}" stroke="#ff7a7a"/></g>`;
+  let p='';for(let x=-2;x<=2;x+=0.03)p+=(p?'L':'M')+X(x)+' '+Y(f(x))+' ';
+  h+=`<path d="${p}" fill="none" stroke="currentColor" stroke-width="2.2"/>`;
+  svg.innerHTML=h;
+ }
+ draw(0);
+ document.getElementById('oddgo').onclick=()=>{let t=0;
+  const iv=setInterval(()=>{t+=0.04;draw(Math.min(t,1));if(t>=1){clearInterval(iv);
+   out.innerHTML='<span style="color:#5fd39a">They overlay exactly → integral = 0</span>';}},28);};
+ document.getElementById('oddreset').onclick=()=>{draw(0);out.textContent='';};
+})();
+</script>
+</body></html>

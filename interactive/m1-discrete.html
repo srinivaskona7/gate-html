@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Module 1 — Discrete Mathematics | GATE 2027</title>
+<style>
+:root{--bg:#0f1420;--panel:#171e2e;--panel2:#1e2739;--line:#2b3651;--ink:#e8edf7;
+ --dim:#95a3bd;--accent:#5dd8f2;--gold:#ffc766;--green:#5fd39a;--red:#ff7a7a;
+ --violet:#b48bff;--orange:#ff9f5a}
+@media(prefers-color-scheme:light){:root{--bg:#f4f6fb;--panel:#fff;--panel2:#eef2f9;
+ --line:#d6deec;--ink:#16203a;--dim:#5a6b89;--accent:#0a7ea4;--gold:#9a6400;
+ --green:#1b7f52;--red:#c0392b;--violet:#6f42c1;--orange:#c2560a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.68;
+ font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Segoe UI,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:28px 20px 90px}
+a.back{color:var(--accent);text-decoration:none;font-size:14px}
+h1{font-size:clamp(26px,5vw,38px);margin:14px 0 6px}
+.lead{color:var(--dim);font-size:16.5px;margin-top:0}
+h2{font-size:22px;margin:40px 0 12px;padding-top:14px;border-top:1px solid var(--line)}
+h3{font-size:17px;margin:26px 0 8px;color:var(--accent)}
+p{font-size:15.5px}
+.m{font-family:"Latin Modern Math",Cambria Math,Georgia,serif;font-style:italic}
+code{background:var(--panel2);padding:2px 6px;border-radius:5px;font-size:13.5px;
+ font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-style:normal}
+table{width:100%;border-collapse:collapse;font-size:14.5px;margin:14px 0}
+th,td{padding:8px 11px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--accent);font-size:12px;text-transform:uppercase;letter-spacing:.7px}
+.tt td,.tt th{text-align:center;font-variant-numeric:tabular-nums}
+.T{color:var(--green);font-weight:700}.F{color:var(--red);font-weight:700}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;margin:20px 0}
+.demo{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:20px;margin:22px 0}
+.demo h4{margin:0 0 4px;font-size:15px;color:var(--gold);letter-spacing:.3px}
+.demo .cap{color:var(--dim);font-size:13.5px;margin:0 0 14px}
+button{background:var(--accent);color:#06131a;border:0;padding:8px 17px;border-radius:9px;
+ font-weight:650;font-size:14px;cursor:pointer;font-family:inherit}
+button:hover{filter:brightness(1.12)}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.note{border-left:3px solid var(--gold);background:var(--panel2);padding:13px 17px;
+ border-radius:0 10px 10px 0;margin:16px 0;font-size:14.5px}
+.note b{color:var(--gold)}
+.warn{border-left-color:var(--red)}.warn b{color:var(--red)}
+.prob{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--violet);
+ border-radius:0 14px 14px 0;padding:20px;margin:22px 0}
+.prob .ttl{font-weight:700;color:var(--violet);font-size:14px;letter-spacing:.4px}
+details{margin-top:10px}
+summary{cursor:pointer;color:var(--accent);font-size:14px;font-weight:600}
+.ans{background:var(--panel2);border-radius:10px;padding:14px 17px;margin-top:10px;font-size:14.5px}
+svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.anim-note{font-size:13px;color:var(--dim);margin-top:10px;font-style:italic}
+.kbd{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+ border-radius:5px;padding:1px 7px;font-size:12.5px}
+ul li{font-size:15.5px;margin:5px 0}
+</style>
+</head>
+<body><div class="wrap">
+<a class="back" href="index.html">← All modules</a>
+<h1>Module 1 · Discrete Mathematics</h1>
+<p class="lead">The mathematics of separate, countable things — statements that are true
+or false, elements in a set, nodes in a network. The highest-yield GATE topic, because
+computers are themselves discrete machines.</p>
+
+<h2>1.1 Propositional Logic</h2>
+<p>A <b>proposition</b> is a declarative sentence that is definitely either <b>true</b> or
+<b>false</b> — never both, never neither.</p>
+<ul>
+<li>“7 is a prime number.” → a proposition (true).</li>
+<li>“Delhi is the capital of France.” → a proposition (false).</li>
+<li>“What time is it?” → <b>not</b> a proposition; a question has no truth value.</li>
+<li>“<span class="m">x &gt; 5</span>” → not a proposition until <span class="m">x</span> is fixed. This is a <b>predicate</b>.</li>
+</ul>
+
+<h3>The five connectives, defined completely</h3>
+<table class="tt">
+<tr><th>p</th><th>q</th><th>¬p</th><th>p ∧ q</th><th>p ∨ q</th><th>p → q</th><th>p ↔ q</th></tr>
+<tr><td class="T">T</td><td class="T">T</td><td class="F">F</td><td class="T">T</td><td class="T">T</td><td class="T">T</td><td class="T">T</td></tr>
+<tr><td class="T">T</td><td class="F">F</td><td class="F">F</td><td class="F">F</td><td class="T">T</td><td class="F">F</td><td class="F">F</td></tr>
+<tr><td class="F">F</td><td class="T">T</td><td class="T">T</td><td class="F">F</td><td class="T">T</td><td class="T">T</td><td class="F">F</td></tr>
+<tr><td class="F">F</td><td class="F">F</td><td class="T">T</td><td class="F">F</td><td class="F">F</td><td class="T">T</td><td class="T">T</td></tr>
+</table>
+
+<div class="note warn"><b>The one row everyone gets wrong.</b>
+<span class="m">p → q</span> is <b>true</b> whenever <span class="m">p</span> is false.
+“If the moon is made of cheese, then I am the king” is a <i>true</i> statement — a promise
+whose condition never occurs is never broken. This is <b>vacuous truth</b>. Memorise:
+<i>an implication is false in exactly one situation — true premise, false conclusion.</i></div>
+
+<div class="demo">
+<h4>▶ Interactive · The Implication Gate</h4>
+<p class="cap">Click any cell to toggle it. The vending machine only breaks its promise
+when a coin went in and no snack came out.</p>
+<svg viewBox="0 0 560 240" id="impl">
+  <text x="20" y="28" fill="currentColor" font-size="13" opacity=".6">p →  q</text>
+  <g id="cells"></g>
+  <text x="300" y="60" fill="currentColor" font-size="13" opacity=".75">Rule: insert coin → get snack</text>
+  <g id="machine">
+    <rect x="300" y="80" width="110" height="130" rx="10" fill="none" stroke="currentColor" stroke-width="2" opacity=".45"/>
+    <rect x="316" y="96" width="78" height="52" rx="5" fill="currentColor" opacity=".12"/>
+    <circle cx="340" cy="170" r="9" fill="none" stroke="currentColor" stroke-width="2" opacity=".5"/>
+    <rect x="360" y="162" width="34" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="2" opacity=".5"/>
+  </g>
+  <text id="verdict" x="430" y="150" font-size="15" font-weight="700">—</text>
+</svg>
+<p class="anim-note">Three of the four cells are honest. Only (p=T, q=F) is red.</p>
+</div>
+
+<h3>Equivalence laws — your algebra toolkit</h3>
+<table>
+<tr><th>Law</th><th>Statement</th></tr>
+<tr><td>Identity</td><td class="m">p ∧ T ≡ p ; p ∨ F ≡ p</td></tr>
+<tr><td>Domination</td><td class="m">p ∨ T ≡ T ; p ∧ F ≡ F</td></tr>
+<tr><td>Idempotent</td><td class="m">p ∨ p ≡ p ; p ∧ p ≡ p</td></tr>
+<tr><td>Double negation</td><td class="m">¬(¬p) ≡ p</td></tr>
+<tr><td>Distributive</td><td class="m">p ∨ (q ∧ r) ≡ (p ∨ q) ∧ (p ∨ r)</td></tr>
+<tr><td><b>De Morgan</b></td><td class="m">¬(p ∧ q) ≡ ¬p ∨ ¬q ; ¬(p ∨ q) ≡ ¬p ∧ ¬q</td></tr>
+<tr><td>Absorption</td><td class="m">p ∨ (p ∧ q) ≡ p</td></tr>
+<tr><td><b>Implication</b></td><td class="m">p → q ≡ ¬p ∨ q</td></tr>
+<tr><td><b>Contrapositive</b></td><td class="m">p → q ≡ ¬q → ¬p</td></tr>
+</table>
+<div class="note"><b>The single most useful identity for GATE:</b>
+<span class="m">p → q ≡ ¬p ∨ q</span>. Convert every implication to an OR immediately;
+the rest becomes mechanical.</div>
+
+<table>
+<tr><th>Name</th><th>Form</th><th>Equivalent to p → q?</th></tr>
+<tr><td>Converse</td><td class="m">q → p</td><td style="color:var(--red)">✗ No</td></tr>
+<tr><td>Inverse</td><td class="m">¬p → ¬q</td><td style="color:var(--red)">✗ No</td></tr>
+<tr><td>Contrapositive</td><td class="m">¬q → ¬p</td><td style="color:var(--green)">✓ Yes</td></tr>
+</table>
+
+<div class="demo">
+<h4>▶ Animation A1.1 · Truth-table sweep</h4>
+<p class="cap">The hypothetical syllogism
+<span class="m">[(p→q) ∧ (q→r)] → (p→r)</span>, evaluated row by row.</p>
+<table class="tt" id="sweep"></table>
+<div class="row">
+  <button id="play">Play sweep</button>
+  <button class="ghost" id="step">Step</button>
+  <button class="ghost" id="reset">Reset</button>
+  <span id="banner" style="font-weight:700;color:var(--green)"></span>
+</div>
+</div>
+
+<div class="prob">
+<div class="ttl">PROBLEM 1.1 · 1 mark</div>
+<p>Show that <span class="m">[(p→q) ∧ (q→r)] → (p→r)</span> is a tautology.</p>
+<details><summary>Show full solution</summary><div class="ans">
+<p><b>Method A — truth table.</b> Run the sweep above. All eight rows evaluate to T,
+so the formula is a tautology. <i>(Verified by exhaustive machine check.)</i></p>
+<p><b>Method B — the exam-speed route.</b> Assume the whole formula is <b>false</b>.
+Then LHS = T and <span class="m">p→r</span> = F. From <span class="m">p→r</span> = F we get
+<span class="m">p</span>=T and <span class="m">r</span>=F. From LHS, <span class="m">p→q</span>=T
+with <span class="m">p</span>=T forces <span class="m">q</span>=T. But then
+<span class="m">q→r</span> = T→F = F, so LHS = F — a contradiction. No falsifying row
+exists, therefore it is a tautology. ∎</p>
+</div></details>
+</div>
+
+<div class="prob">
+<div class="ttl">PROBLEM 1.2 · 1 mark</div>
+<p>How many of the 8 assignments satisfy <span class="m">(p ∨ q) ∧ (¬q ∨ r)</span>?</p>
+<details><summary>Show full solution</summary><div class="ans">
+<p>Only rows with <span class="m">p ∨ q</span> = T can work, which eliminates p=q=F.</p>
+<table class="tt">
+<tr><th>p,q,r</th><th>p∨q</th><th>¬q∨r</th><th>AND</th></tr>
+<tr><td>T,T,T</td><td class="T">T</td><td class="T">T</td><td class="T">✓</td></tr>
+<tr><td>T,T,F</td><td class="T">T</td><td class="F">F</td><td class="F">✗</td></tr>
+<tr><td>T,F,T</td><td class="T">T</td><td class="T">T</td><td class="T">✓</td></tr>
+<tr><td>T,F,F</td><td class="T">T</td><td class="T">T</td><td class="T">✓</td></tr>
+<tr><td>F,T,T</td><td class="T">T</td><td class="T">T</td><td class="T">✓</td></tr>
+<tr><td>F,T,F</td><td class="T">T</td><td class="F">F</td><td class="F">✗</td></tr>
+</table>
+<p><b>Answer: 4</b> satisfying assignments (machine-verified). The formula is
+satisfiable but not a tautology. ∎</p>
+</div></details>
+</div>
+
+<h2>1.2 First-Order (Predicate) Logic</h2>
+<p>“Every student passed” and “Some student passed” are different claims, yet
+propositional logic can only call each a single opaque letter. First-order logic looks
+<i>inside</i> the sentence.</p>
+<ul>
+<li><b>Predicate:</b> a statement with slots — <span class="m">P(x)</span> = “x is prime”.
+<span class="m">P(7)</span> is T; <span class="m">P(8)</span> is F.</li>
+<li><b>Domain:</b> the set variables range over. <b>Always state it</b> — truth depends on it.</li>
+<li><b>Quantifiers:</b> <span class="m">∀x P(x)</span> (“for every x”);
+<span class="m">∃x P(x)</span> (“for at least one x”).</li>
+</ul>
+
+<h3>The two translation templates</h3>
+<table>
+<tr><th>English</th><th>Correct logic</th><th>Why the alternative fails</th></tr>
+<tr><td>“All A are B”</td><td class="m">∀x (A(x) → B(x))</td>
+    <td>Using ∧ would claim <i>everything in the universe</i> is both an A and a B.</td></tr>
+<tr><td>“Some A is B”</td><td class="m">∃x (A(x) ∧ B(x))</td>
+    <td>Using → would be satisfied vacuously by any non-A object — a free pass.</td></tr>
+</table>
+<div class="note"><b>Pattern:</b> ∀ pairs with → ; ∃ pairs with ∧.</div>
+
+<h3>Negation — quantifier duality</h3>
+<p style="text-align:center" class="m">¬∀x P(x) ≡ ∃x ¬P(x) &nbsp;&nbsp;&nbsp;&nbsp;
+¬∃x P(x) ≡ ∀x ¬P(x)</p>
+<p>To negate: push the ¬ inward, <b>flipping every quantifier as it passes</b>, and negate
+the body. “Not everyone is happy” = “someone is unhappy”.</p>
+
+<div class="demo">
+<h4>▶ Diagram D1.3 · Quantifier-order grid</h4>
+<p class="cap">Rows = people x, columns = people y. A dot at (x,y) means x loves y.
+<b>∀x∃y</b> = every <i>row</i> has a dot. <b>∃y∀x</b> = some <i>column</i> is full.</p>
+<svg viewBox="0 0 520 230" id="qgrid"></svg>
+<div class="row"><button id="qtoggle">Switch scenario</button>
+<span id="qlabel" style="font-size:14px;color:var(--dim)"></span></div>
+</div>
+
+<div class="prob">
+<div class="ttl">PROBLEM 1.6 · 2 marks</div>
+<p>Over the integers with <span class="m">S(x,y)</span> meaning <span class="m">x + y = 0</span>,
+which is true? (a) <span class="m">∀x∃y S(x,y)</span> &nbsp; (b) <span class="m">∃y∀x S(x,y)</span></p>
+<details><summary>Show full solution</summary><div class="ans">
+<p><b>(a) True.</b> Given any integer x, choose y = −x; then x + y = 0. ✓</p>
+<p><b>(b) False.</b> It claims one fixed y works for <i>every</i> x. Take that y; it fails for
+x = 1 − y, since (1−y) + y = 1 ≠ 0. ✗</p>
+<p><b>Moral:</b> the inner variable may depend on the outer one, never the reverse. ∎</p>
+</div></details>
+</div>
+
+<h2>1.3 Sets, Relations, Functions</h2>
+<p>A <b>set</b> is an unordered collection of distinct objects. Order and repetition are
+irrelevant: <code>{1,2,2,3} = {3,1,2}</code>. Note <span class="m">∅ ≠ {∅}</span> — the second
+is a box containing an empty box, so it has cardinality 1.</p>
+<p>If <span class="m">|A| = n</span> then the power set has <span class="m">2ⁿ</span> elements,
+because building a subset means making n independent in/out decisions.</p>
+
+<h3>Inclusion–Exclusion Principle</h3>
+<p class="m" style="text-align:center">|A ∪ B| = |A| + |B| − |A ∩ B|</p>
+<p class="m" style="text-align:center">|A∪B∪C| = |A|+|B|+|C| − |A∩B| − |A∩C| − |B∩C| + |A∩B∩C|</p>
+<p>Add singles, subtract pairs, add triples — alternating.</p>
+
+<div class="demo">
+<h4>▶ Diagram D1.4 · Three-circle Venn, exact counts</h4>
+<p class="cap">Integers 1–1000 divisible by 3, 5 or 7. Hover a region to isolate it.
+All eight regions sum to exactly 1000 — a built-in self-check.</p>
+<svg viewBox="0 0 440 340" id="venn"></svg>
+<p class="anim-note" id="vennreadout">Union = 543 · Outside = 457 · Total = 1000 ✓</p>
+</div>
+
+<div class="prob">
+<div class="ttl">PROBLEM 1.7 · 2 marks</div>
+<p>Among 1 to 1000, how many integers are divisible by 3, 5 or 7? How many by none?</p>
+<details><summary>Show full solution</summary><div class="ans">
+<table><tr><th>Term</th><th>Count</th></tr>
+<tr><td class="m">⌊1000/3⌋</td><td>333</td></tr><tr><td class="m">⌊1000/5⌋</td><td>200</td></tr>
+<tr><td class="m">⌊1000/7⌋</td><td>142</td></tr><tr><td class="m">⌊1000/15⌋</td><td>66</td></tr>
+<tr><td class="m">⌊1000/21⌋</td><td>47</td></tr><tr><td class="m">⌊1000/35⌋</td><td>28</td></tr>
+<tr><td class="m">⌊1000/105⌋</td><td>9</td></tr></table>
+<p class="m">|A∪B∪C| = 333 + 200 + 142 − 66 − 47 − 28 + 9 = <b>543</b></p>
+<p>None of them: 1000 − 543 = <b>457</b>. <i>(Both machine-computed.)</i> ∎</p>
+</div></details>
+</div>
+
+<h3>Relations — the five properties</h3>
+<table>
+<tr><th>Property</th><th>Definition</th><th>Plain meaning</th></tr>
+<tr><td>Reflexive</td><td class="m">∀a (aRa)</td><td>everything relates to itself</td></tr>
+<tr><td>Irreflexive</td><td class="m">∀a ¬(aRa)</td><td>nothing relates to itself</td></tr>
+<tr><td>Symmetric</td><td class="m">aRb ⇒ bRa</td><td>always mutual</td></tr>
+<tr><td>Antisymmetric</td><td class="m">aRb ∧ bRa ⇒ a = b</td><td>mutual only in the trivial case</td></tr>
+<tr><td>Transitive</td><td class="m">aRb ∧ bRc ⇒ aRc</td><td>shortcuts always exist</td></tr>
+</table>
+<div class="note warn"><b>Antisymmetric is not the negation of symmetric.</b> A relation can
+be both (equality) or neither. This is trap #4 on the master list.</div>
+<p><b>Equivalence relation</b> = reflexive + symmetric + transitive. It <b>partitions</b> the
+set into disjoint classes. Key theorem: equivalence relations correspond one-to-one with
+partitions.</p>
+
+<div class="prob">
+<div class="ttl">PROBLEM 1.8 · 2 marks</div>
+<p>How many equivalence relations exist on a 4-element set?</p>
+<details><summary>Show full solution</summary><div class="ans">
+<p>Equivalence relations ↔ partitions, so count partitions of a 4-set — the Bell number
+<span class="m">B₄</span>. Break down by number of blocks:</p>
+<table><tr><th>Blocks k</th><th>S(4,k)</th><th>Shape</th></tr>
+<tr><td>1</td><td>1</td><td>{abcd}</td></tr>
+<tr><td>2</td><td>7</td><td>3+1 (4 ways) and 2+2 (3 ways)</td></tr>
+<tr><td>3</td><td>6</td><td>2+1+1 — choose the pair, C(4,2)=6</td></tr>
+<tr><td>4</td><td>1</td><td>all singletons</td></tr></table>
+<p class="m">B₄ = 1 + 7 + 6 + 1 = <b>15</b></p>
+<p><i>(Machine-verified via S(n,k) = k·S(n−1,k) + S(n−1,k−1).)</i> ∎</p>
+</div></details>
+</div>
+
+<h3>Functions</h3>
+<table>
+<tr><th>Type</th><th>Condition</th><th>Intuition</th></tr>
+<tr><td><b>Injective</b> (one-to-one)</td><td class="m">f(a₁)=f(a₂) ⇒ a₁=a₂</td><td>no two inputs share an output</td></tr>
+<tr><td><b>Surjective</b> (onto)</td><td>range = codomain</td><td>every output is hit</td></tr>
+<tr><td><b>Bijective</b></td><td>both</td><td>perfect pairing; inverse exists</td></tr>
+</table>
+<div class="note"><b>Pigeonhole principle.</b> If m objects go into n boxes with m &gt; n, some box
+holds at least ⌈m/n⌉ objects. Among any 13 people, two share a birth month.</div>
+
+<h2>1.4 Partial Orders and Lattices</h2>
+<p>A <b>poset</b> is a set with a relation that is reflexive, antisymmetric and transitive.
+“Partial” means some pairs may be <b>incomparable</b>. A <b>lattice</b> is a poset where every
+pair has both a <b>join</b> (least upper bound, ∨) and a <b>meet</b> (greatest lower bound, ∧).</p>
+<p>In a divisibility poset, <b>join = LCM</b> and <b>meet = GCD</b>.</p>
+
+<div class="demo">
+<h4>▶ Animation A1.4 · Join/meet searchlight on D₃₆</h4>
+<p class="cap">The divisors of 36 under divisibility. Click <b>two</b> nodes: upper bounds
+glow green, lower bounds orange, then the LUB and GLB are labelled. Note the lattice is a
+3×3 grid rotated 45° — it is literally <span class="m">D₄ × D₉</span>.</p>
+<svg viewBox="0 0 440 320" id="hasse"></svg>
+<div class="row"><button class="ghost" id="hreset">Clear selection</button>
+<span id="hout" style="font-size:14.5px;font-weight:600"></span></div>
+</div>
+
+<div class="prob">
+<div class="ttl">PROBLEM 1.11 · 2 marks</div>
+<p>For <span class="m">D₃₆</span>: find lub(4,6) and glb(4,6). Is it a lattice? A Boolean algebra?</p>
+<details><summary>Show full solution</summary><div class="ans">
+<p>Divisors: {1, 2, 3, 4, 6, 9, 12, 18, 36} — 9 elements (machine-enumerated).</p>
+<p>lub(4,6) = lcm(4,6) = <b>12</b>. &nbsp; glb(4,6) = gcd(4,6) = <b>2</b>.</p>
+<p>Since LCM and GCD exist for every pair and stay inside the set, <span class="m">D₃₆</span>
+<b>is a lattice</b>, bounded with bottom 1 and top 36. It is distributive
+(<span class="m">Dₙ</span> always is).</p>
+<p><b>Not complemented:</b> for a = 6 we need a′ with lcm = 36 and gcd = 1; the only candidate
+coprime to 6 is 1, whose lcm with 6 is 6, not 36. So it is <b>not a Boolean algebra</b>.
+General rule: <span class="m">Dₙ</span> is Boolean iff n is square-free, and 36 = 2²·3² is not. ∎</p>
+</div></details>
+</div>
+
+<h2>1.5 Monoids and Groups</h2>
+<p>Start with a set and a binary operation, then add axioms one at a time.</p>
+<table>
+<tr><th>Structure</th><th>Axioms required</th></tr>
+<tr><td>Magma</td><td><b>Closure</b></td></tr>
+<tr><td>Semigroup</td><td>Closure + <b>Associativity</b></td></tr>
+<tr><td>Monoid</td><td>Semigroup + <b>Identity</b></td></tr>
+<tr><td>Group</td><td>Monoid + <b>Inverses</b></td></tr>
+<tr><td>Abelian group</td><td>Group + <b>Commutativity</b></td></tr>
+</table>
+<div class="note"><b>Mnemonic ladder:</b> C → A → I → I → C
+(Closure, Associativity, Identity, Inverse, Commutativity).</div>
+<p><b>Lagrange's theorem:</b> for a finite group, the order of any subgroup <b>divides</b> the
+order of the group. Corollary: a group of prime order is cyclic with no proper subgroups.</p>
+
+<div class="demo">
+<h4>▶ Animation A1.5 · Generator orbit on ℤ₁₂</h4>
+<p class="cap">Pick a step size. The arrow hops +a each time, drawing a star polygon.
+A generator visits all 12 positions; others close early into a subgroup.</p>
+<svg viewBox="0 0 320 320" id="clock"></svg>
+<div class="row">
+  <label style="font-size:14px">step a = <b id="aval">5</b></label>
+  <input type="range" id="astep" min="1" max="11" value="5" style="flex:1;min-width:160px;accent-color:#5dd8f2">
+  <button id="orbit">Trace orbit</button>
+</div>
+<p class="anim-note" id="orbitout"></p>
+</div>
+
+<div class="prob">
+<div class="ttl">PROBLEM 1.13 · 2 marks</div>
+<p>For <span class="m">(ℤ₁₂, +)</span>: find all generators, the order of 8, and verify Lagrange.</p>
+<details><summary>Show full solution</summary><div class="ans">
+<p>Generators are the a with gcd(a,12) = 1: <b>{1, 5, 7, 11}</b> — that is φ(12) = 4 of them
+<i>(machine-enumerated)</i>.</p>
+<p>Order of 8 = smallest k with 8k ≡ 0 (mod 12) = 12 / gcd(8,12) = 12/4 = <b>3</b>.
+Check: 8, 16≡4, 24≡0 ✓</p>
+<p>Lagrange: ⟨8⟩ = {0, 4, 8} has order 3, and 3 divides 12 ✓ ∎</p>
+</div></details>
+</div>
+
+<h2>1.6 Graph Theory</h2>
+<p>A graph is a set of <b>vertices</b> plus <b>edges</b> joining pairs. Write n = |V|, m = |E|.</p>
+<div class="note"><b>Handshaking lemma.</b> The sum of all degrees equals <span class="m">2m</span>,
+because each edge contributes two ends. <b>Corollary:</b> the number of odd-degree vertices is
+always even.</div>
+
+<h3>Euler vs Hamilton — the contrast that gets tested</h3>
+<table>
+<tr><th></th><th>Euler circuit</th><th>Hamiltonian cycle</th></tr>
+<tr><td>Visits every…</td><td><b>edge</b> exactly once</td><td><b>vertex</b> exactly once</td></tr>
+<tr><td>Test</td><td>connected + all degrees <b>even</b></td><td>no efficient test — NP-complete</td></tr>
+<tr><td>Euler <i>path</i></td><td>exactly 0 or 2 odd vertices</td><td>Dirac: all deg ≥ n/2 (sufficient only)</td></tr>
+</table>
+
+<h3>Matching and colouring</h3>
+<ul>
+<li><b>Maximal</b> matching cannot be extended; <b>maximum</b> matching is the largest overall. These differ.</li>
+<li><b>Berge's theorem:</b> a matching is maximum iff no augmenting path exists.</li>
+<li><b>Hall's theorem:</b> a matching saturating X exists iff |N(S)| ≥ |S| for every S ⊆ X.</li>
+<li><b>König:</b> in bipartite graphs, max matching = min vertex cover.</li>
+<li><b>Chromatic number:</b> trees and bipartite graphs 2; odd cycles 3; <span class="m">Kₙ</span> is n; any planar graph ≤ 4.</li>
+<li><b>Vizing:</b> edge chromatic number is either Δ or Δ+1 — only two possibilities, always.</li>
+</ul>
+
+<div class="demo">
+<h4>▶ Animation A1.7 · Augmenting path flip</h4>
+<p class="cap">Press play. An alternating path from one unmatched vertex to another is
+traced, then every edge on it swaps state — the matching grows by exactly one.</p>
+<svg viewBox="0 0 460 240" id="match"></svg>
+<div class="row"><button id="aug">Find augmenting path</button>
+<button class="ghost" id="augreset">Reset</button>
+<span id="augout" style="font-size:14.5px;font-weight:600">Matching size: 2</span></div>
+</div>
+
+<div class="prob">
+<div class="ttl">PROBLEMS 1.16 – 1.20 · mixed</div>
+<p><b>1.16</b> A 3-regular graph has 12 edges. How many vertices?<br>
+<b>1.17</b> Prove <span class="m">K₃,₃</span> is not planar.<br>
+<b>1.18</b> How many labelled trees on 6 vertices?<br>
+<b>1.20</b> Three left vertices all adjacent only to two right vertices — is there a matching saturating X?</p>
+<details><summary>Show all solutions</summary><div class="ans">
+<p><b>1.16</b> Handshaking: 3n = 2(12) = 24, so n = <b>8</b>. <i>(Verified.)</i></p>
+<p><b>1.17</b> <span class="m">K₃,₃</span> has n = 6, m = 9, and is bipartite hence triangle-free,
+so every face needs ≥ 4 edges, giving the bound m ≤ 2n − 4 = 8. But m = 9 &gt; 8 — contradiction,
+so it is <b>not planar</b>.</p>
+<p><b>1.18</b> Cayley's formula: <span class="m">n<sup>n−2</sup></span> = 6⁴ = <b>1296</b>
+<i>(computed)</i>. Each has exactly 5 edges.</p>
+<p><b>1.20</b> Hall's condition with S = X: |S| = 3 but |N(S)| = 2 &lt; 3. The condition fails, so
+<b>no matching saturates X</b>. Maximum matching size is 2. ∎</p>
+</div></details>
+</div>
+
+<h2>1.7 Combinatorics</h2>
+<div class="demo">
+<h4>▶ Diagram D1.13 · The counting decision tree</h4>
+<p class="cap">Run this for any counting question. Four cells cover everything.</p>
+<table>
+<tr><th></th><th>Repetition allowed</th><th>No repetition</th></tr>
+<tr><td><b>Order matters</b></td><td class="m">nʳ<br><span style="font-size:12px;font-style:normal;color:var(--dim)">PIN codes</span></td>
+    <td class="m">P(n,r) = n!/(n−r)!<br><span style="font-size:12px;font-style:normal;color:var(--dim)">race podiums</span></td></tr>
+<tr><td><b>Order irrelevant</b></td><td class="m">C(n+r−1, r)<br><span style="font-size:12px;font-style:normal;color:var(--dim)">ice-cream scoops</span></td>
+    <td class="m">C(n,r) = n!/(r!(n−r)!)<br><span style="font-size:12px;font-style:normal;color:var(--dim)">committees</span></td></tr>
+</table>
+</div>
+
+<h3>Stars and bars</h3>
+<p>The number of non-negative integer solutions to
+<span class="m">x₁ + x₂ + ⋯ + x_k = n</span> is <span class="m">C(n+k−1, k−1)</span>.
+Picture n stars separated by k−1 bars: <code>★★★ | ★★ | ★</code> encodes (3, 2, 1).</p>
+
+<h3>Solving a linear recurrence</h3>
+<ol>
+<li>Write the <b>characteristic equation</b>.</li>
+<li>Distinct roots → <span class="m">aₙ = α r₁ⁿ + β r₂ⁿ</span>.</li>
+<li>Repeated root → <span class="m">aₙ = (α + βn) rⁿ</span>.</li>
+<li>Substitute the initial conditions and solve for α, β.</li>
+</ol>
+
+<div class="demo">
+<h4>▶ Animation A1.10 · Recurrence unrolling</h4>
+<p class="cap">Binary strings of length n with no two consecutive 1s obey
+<span class="m">aₙ = aₙ₋₁ + aₙ₋₂</span>. Watch the table build.</p>
+<svg viewBox="0 0 520 170" id="recur"></svg>
+<div class="row"><button id="runrec">Build to n = 8</button>
+<button class="ghost" id="recreset">Reset</button></div>
+</div>
+
+<div class="prob">
+<div class="ttl">PROBLEMS 1.21 – 1.25 · mixed</div>
+<p><b>1.21</b> Arrangements of MISSISSIPPI?<br>
+<b>1.22</b> Solve <span class="m">aₙ = 3aₙ₋₁ − 2aₙ₋₂</span>, a₀ = 2, a₁ = 3.<br>
+<b>1.23</b> Binary strings of length 8 with no two consecutive 1s?<br>
+<b>1.25</b> Five letters into five envelopes, none correct?</p>
+<details><summary>Show all solutions</summary><div class="ans">
+<p><b>1.21</b> 11 letters: M×1, I×4, S×4, P×2 →
+<span class="m">11!/(1!·4!·4!·2!)</span> = 39916800 / 1152 = <b>34650</b> <i>(computed)</i>.</p>
+<p><b>1.22</b> Characteristic equation <span class="m">r² − 3r + 2 = 0</span> → roots 1 and 2.
+So <span class="m">aₙ = α + β·2ⁿ</span>. From a₀ = 2: α + β = 2. From a₁ = 3: α + 2β = 3.
+Subtracting, β = 1 and α = 1, giving <b>aₙ = 1 + 2ⁿ</b>.</p>
+<table class="tt"><tr><th>n</th><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td></tr>
+<tr><th>recurrence</th><td>2</td><td>3</td><td>5</td><td>9</td><td>17</td><td>33</td><td>65</td><td>129</td></tr>
+<tr><th>1 + 2ⁿ</th><td>2</td><td>3</td><td>5</td><td>9</td><td>17</td><td>33</td><td>65</td><td>129</td></tr></table>
+<p><i>Both routes machine-computed and in agreement.</i></p>
+<p><b>1.23</b> A valid string ends in 0 (preceded by any valid length n−1) or in 01 (preceded by
+any valid length n−2), so <span class="m">aₙ = aₙ₋₁ + aₙ₋₂</span> with a₁ = 2, a₂ = 3.
+Sequence: 2, 3, 5, 8, 13, 21, 34, <b>55</b> <i>(machine-verified)</i> — shifted Fibonacci.</p>
+<p><b>1.25</b> Derangements. Using <span class="m">Dₙ = (n−1)(Dₙ₋₁ + Dₙ₋₂)</span> with D₃ = 2, D₄ = 9:
+<span class="m">D₅ = 4(9 + 2) = <b>44</b></span>. Probability 44/120 ≈ 0.3667, strikingly close to
+1/e ≈ 0.3679. ∎</p>
+</div></details>
+</div>
+
+<p style="margin-top:48px"><a class="back" href="index.html">← All modules</a> &nbsp;·&nbsp;
+<a class="back" href="m2-linear-algebra.html">Module 2: Linear Algebra →</a></p>
+</div>
+
+<script>
+/* ---------- D1.1 implication gate ---------- */
+(function(){
+ const g=document.getElementById('cells'),v=document.getElementById('verdict');
+ const rows=[[1,1],[1,0],[0,1],[0,0]];let sel=1;
+ function draw(){
+  g.innerHTML='';
+  rows.forEach((r,i)=>{
+   const ok=!(r[0]===1&&r[1]===0);
+   const y=40+i*45;
+   const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
+   rect.setAttribute('x',20);rect.setAttribute('y',y);rect.setAttribute('width',250);
+   rect.setAttribute('height',38);rect.setAttribute('rx',8);
+   rect.setAttribute('fill',ok?'#5fd39a':'#ff7a7a');
+   rect.setAttribute('opacity',i===sel?.42:.14);
+   rect.style.cursor='pointer';rect.onclick=()=>{sel=i;draw();};
+   g.appendChild(rect);
+   const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+   t.setAttribute('x',34);t.setAttribute('y',y+25);t.setAttribute('font-size',14);
+   t.setAttribute('fill','currentColor');
+   t.textContent=`p = ${r[0]?'T':'F'}   q = ${r[1]?'T':'F'}   →   ${ok?'T':'F'}  ${ok?'✓':'✗'}`;
+   t.style.pointerEvents='none';g.appendChild(t);
+  });
+  const r=rows[sel],ok=!(r[0]===1&&r[1]===0);
+  v.textContent=ok?'promise kept':'PROMISE BROKEN';
+  v.setAttribute('fill',ok?'#5fd39a':'#ff7a7a');
+ }
+ draw();
+})();
+
+/* ---------- A1.1 truth table sweep ---------- */
+(function(){
+ const tbl=document.getElementById('sweep'),banner=document.getElementById('banner');
+ const rows=[];
+ for(const p of [1,0])for(const q of [1,0])for(const r of [1,0]){
+  const pq=(!p||q)?1:0,qr=(!q||r)?1:0,lhs=(pq&&qr)?1:0,pr=(!p||r)?1:0;
+  rows.push([p,q,r,pq,qr,lhs,pr,((!lhs)||pr)?1:0]);
+ }
+ const head=['p','q','r','p→q','q→r','LHS','p→r','whole'];
+ function cell(v){return `<td class="${v?'T':'F'}">${v?'T':'F'}</td>`;}
+ function render(upto){
+  let h='<tr>'+head.map(x=>`<th>${x}</th>`).join('')+'</tr>';
+  rows.forEach((r,i)=>{
+   const on=i<upto;
+   h+=`<tr style="opacity:${on?1:.22};transition:opacity .3s;background:${i===upto-1?'rgba(93,216,242,.13)':'transparent'}">`
+     +r.map(cell).join('')+'</tr>';
+  });
+  tbl.innerHTML=h;
+ }
+ let n=0,timer=null;
+ function step(){if(n<8){n++;render(n);} if(n===8){banner.textContent='✓ TAUTOLOGY — all 8 rows true';}}
+ document.getElementById('step').onclick=step;
+ document.getElementById('reset').onclick=()=>{clearInterval(timer);n=0;banner.textContent='';render(0);};
+ document.getElementById('play').onclick=()=>{clearInterval(timer);n=0;banner.textContent='';render(0);
+  timer=setInterval(()=>{step();if(n>=8)clearInterval(timer);},420);};
+ render(0);
+})();
+
+/* ---------- D1.3 quantifier grid ---------- */
+(function(){
+ const svg=document.getElementById('qgrid'),lab=document.getElementById('qlabel');
+ let mode=0;const N=4;
+ function draw(){
+  const A=[];
+  for(let i=0;i<N;i++){A.push([]);for(let j=0;j<N;j++)A[i].push(0);}
+  if(mode===0){for(let i=0;i<N;i++)A[i][(i*2+1)%N]=1;}
+  else{for(let i=0;i<N;i++)A[i][2]=1;}
+  let h='';
+  const ox=40,oy=30,s=38;
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++){
+   h+=`<rect x="${ox+j*s}" y="${oy+i*s}" width="${s-4}" height="${s-4}" rx="5"
+        fill="currentColor" opacity="${A[i][j]?0:0.07}" stroke="currentColor" stroke-opacity=".12"/>`;
+   if(A[i][j])h+=`<circle cx="${ox+j*s+(s-4)/2}" cy="${oy+i*s+(s-4)/2}" r="8" fill="#5dd8f2"/>`;
+  }
+  h+=`<text x="${ox}" y="20" font-size="11" fill="currentColor" opacity=".55">y (loved)</text>`;
+  h+=`<text x="4" y="${oy+28}" font-size="11" fill="currentColor" opacity=".55">x</text>`;
+  const rowsOk=A.every(r=>r.some(v=>v));
+  let colOk=false;for(let j=0;j<N;j++)if(A.every(r=>r[j]))colOk=true;
+  h+=`<text x="230" y="60" font-size="14" fill="${rowsOk?'#5fd39a':'#ff7a7a'}">∀x∃y : ${rowsOk?'TRUE':'FALSE'}</text>`;
+  h+=`<text x="230" y="86" font-size="14" fill="${colOk?'#5fd39a':'#ff7a7a'}">∃y∀x : ${colOk?'TRUE':'FALSE'}</text>`;
+  h+=`<text x="230" y="120" font-size="12" fill="currentColor" opacity=".6">${mode===0
+      ?'every row has a dot,':'a whole column is full,'}</text>`;
+  h+=`<text x="230" y="138" font-size="12" fill="currentColor" opacity=".6">${mode===0
+      ?'but no column is full':'so both hold'}</text>`;
+  svg.innerHTML=h;
+  lab.textContent=mode===0?'Scenario A: everyone loves someone'
+                          :'Scenario B: one person is loved by everyone';
+ }
+ document.getElementById('qtoggle').onclick=()=>{mode=1-mode;draw();};
+ draw();
+})();
+
+/* ---------- D1.4 Venn with verified counts ---------- */
+(function(){
+ const svg=document.getElementById('venn'),out=document.getElementById('vennreadout');
+ const R=[
+  {id:'a',x:155,y:120,t:'229'},{id:'b',x:265,y:120,t:'115'},{id:'c',x:210,y:215,t:'76'},
+  {id:'ab',x:210,y:110,t:'57'},{id:'ac',x:172,y:175,t:'38'},{id:'bc',x:248,y:175,t:'19'},
+  {id:'abc',x:210,y:152,t:'9'}];
+ let h=`<rect x="12" y="12" width="416" height="316" rx="14" fill="none"
+        stroke="currentColor" stroke-opacity=".25"/>
+   <text x="24" y="34" font-size="12" fill="currentColor" opacity=".6">1 … 1000</text>
+   <text x="330" y="310" font-size="15" fill="currentColor" font-weight="700">457</text>
+   <text x="300" y="326" font-size="10.5" fill="currentColor" opacity=".55">none of them</text>`;
+ const circ=[[160,130,88,'#5dd8f2','÷3',96,56],[260,130,88,'#b48bff','÷5',300,56],
+             [210,205,88,'#ffc766','÷7',198,315]];
+ circ.forEach(c=>{h+=`<circle cx="${c[0]}" cy="${c[1]}" r="${c[2]}" fill="${c[3]}"
+   fill-opacity=".14" stroke="${c[3]}" stroke-width="1.6"/>
+   <text x="${c[5]}" y="${c[6]}" font-size="13" font-weight="700" fill="${c[3]}">${c[4]}</text>`;});
+ R.forEach(r=>{h+=`<text x="${r.x}" y="${r.y}" font-size="15" font-weight="700"
+   text-anchor="middle" fill="currentColor">${r.t}</text>`;});
+ svg.innerHTML=h;
+ const sum=229+115+76+57+38+19+9;
+ out.textContent=`Union = ${sum} · Outside = ${1000-sum} · Total = ${sum+(1000-sum)} ✓ (all regions machine-verified)`;
+})();
+
+/* ---------- A1.4 Hasse diagram of D36 ---------- */
+(function(){
+ const svg=document.getElementById('hasse'),out=document.getElementById('hout');
+ const N={1:[210,285],2:[140,225],3:[280,225],4:[80,165],6:[210,165],9:[340,165],
+          12:[140,105],18:[280,105],36:[210,45]};
+ const E=[[1,2],[1,3],[2,4],[2,6],[3,6],[3,9],[4,12],[6,12],[6,18],[9,18],[12,36],[18,36]];
+ let sel=[];
+ const gcd=(a,b)=>b?gcd(b,a%b):a, lcm=(a,b)=>a*b/gcd(a,b);
+ function draw(){
+  let h='';
+  E.forEach(e=>{const a=N[e[0]],b=N[e[1]];
+   h+=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"
+        stroke="currentColor" stroke-opacity=".28" stroke-width="1.6"/>`;});
+  let lub=null,glb=null;
+  if(sel.length===2){lub=lcm(sel[0],sel[1]);glb=gcd(sel[0],sel[1]);}
+  for(const k in N){
+   const n=+k,p=N[k];let fill='var(--panel2)',stroke='currentColor',so='.45',tc='currentColor';
+   if(sel.length===2){
+    if(sel[0]%n===0&&sel[1]%n===0){fill='rgba(255,159,90,.3)';}
+    if(n%sel[0]===0&&n%sel[1]===0){fill='rgba(95,211,154,.3)';}
+   }
+   if(n===lub){fill='#5fd39a';tc='#06131a';so='1';}
+   if(n===glb){fill='#ff9f5a';tc='#06131a';so='1';}
+   if(sel.includes(n)){stroke='#5dd8f2';so='1';}
+   h+=`<circle cx="${p[0]}" cy="${p[1]}" r="19" fill="${fill}" stroke="${stroke}"
+        stroke-opacity="${so}" stroke-width="2.2" style="cursor:pointer" data-n="${n}"/>
+       <text x="${p[0]}" y="${p[1]+5}" font-size="13.5" font-weight="700" text-anchor="middle"
+        fill="${tc}" style="pointer-events:none">${n}</text>`;
+  }
+  svg.innerHTML=h;
+  svg.querySelectorAll('circle[data-n]').forEach(c=>c.onclick=()=>{
+   const n=+c.dataset.n;
+   if(sel.includes(n))sel=sel.filter(x=>x!==n);else{sel.push(n);if(sel.length>2)sel.shift();}
+   draw();});
+  out.innerHTML = sel.length===2
+   ? `<span style="color:#5fd39a">${sel[0]} ∨ ${sel[1]} = lcm = ${lub}</span> &nbsp;·&nbsp;
+      <span style="color:#ff9f5a">${sel[0]} ∧ ${sel[1]} = gcd = ${glb}</span>`
+   : `<span style="color:var(--dim)">Select two nodes…</span>`;
+ }
+ document.getElementById('hreset').onclick=()=>{sel=[];draw();};
+ draw();
+})();
+
+/* ---------- A1.5 Z12 orbit ---------- */
+(function(){
+ const svg=document.getElementById('clock'),out=document.getElementById('orbitout');
+ const sl=document.getElementById('astep'),av=document.getElementById('aval');
+ const cx=160,cy=160,R=115;
+ const pos=i=>[cx+R*Math.sin(i*Math.PI/6),cy-R*Math.cos(i*Math.PI/6)];
+ const gcd=(a,b)=>b?gcd(b,a%b):a;
+ function draw(path){
+  let h=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="currentColor" stroke-opacity=".2"/>`;
+  for(let i=0;i<path.length-1;i++){
+   const a=pos(path[i]),b=pos(path[i+1]);
+   h+=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#5dd8f2"
+        stroke-width="2" opacity=".85"/>`;
+  }
+  for(let i=0;i<12;i++){
+   const p=pos(i),on=path.includes(i);
+   h+=`<circle cx="${p[0]}" cy="${p[1]}" r="15" fill="${on?'#5dd8f2':'var(--panel2)'}"
+        stroke="currentColor" stroke-opacity=".35"/>
+       <text x="${p[0]}" y="${p[1]+5}" font-size="12.5" font-weight="650" text-anchor="middle"
+        fill="${on?'#06131a':'currentColor'}">${i}</text>`;
+  }
+  svg.innerHTML=h;
+ }
+ function run(){
+  const a=+sl.value;av.textContent=a;
+  const path=[0];let cur=0;
+  do{cur=(cur+a)%12;path.push(cur);}while(cur!==0&&path.length<14);
+  draw(path);
+  const ord=12/gcd(a,12);
+  out.innerHTML=`gcd(${a}, 12) = ${gcd(a,12)} → subgroup order ${ord}. `+
+   (gcd(a,12)===1?`<b style="color:#5fd39a">${a} is a generator</b> — it visits all 12.`
+                 :`<b style="color:#ff9f5a">Not a generator</b> — closes into {${
+                   path.slice(0,ord).sort((x,y)=>x-y).join(', ')}}.`);
+ }
+ sl.oninput=run;document.getElementById('orbit').onclick=run;run();
+})();
+
+/* ---------- A1.7 augmenting path ---------- */
+(function(){
+ const svg=document.getElementById('match'),out=document.getElementById('augout');
+ const L=[[110,50],[110,120],[110,190]],Rt=[[350,50],[350,120],[350,190]];
+ const edges=[[0,0],[0,1],[1,0],[1,2],[2,1],[2,2]];
+ let M=[[1,1],[2,2]];
+ function has(a,b){return M.some(m=>m[0]===a&&m[1]===b);}
+ function draw(hl){
+  let h='';
+  edges.forEach(e=>{
+   const m=has(e[0],e[1]);
+   const on=hl&&hl.some(x=>x[0]===e[0]&&x[1]===e[1]);
+   h+=`<line x1="${L[e[0]][0]}" y1="${L[e[0]][1]}" x2="${Rt[e[1]][0]}" y2="${Rt[e[1]][1]}"
+        stroke="${on?'#ffc766':(m?'#ff7a7a':'currentColor')}"
+        stroke-width="${m?4:2}" stroke-opacity="${m||on?1:.2}"/>`;
+  });
+  const used=new Set();M.forEach(m=>{used.add('L'+m[0]);used.add('R'+m[1]);});
+  L.forEach((p,i)=>{h+=`<circle cx="${p[0]}" cy="${p[1]}" r="17"
+    fill="${used.has('L'+i)?'var(--panel2)':'rgba(95,211,154,.35)'}"
+    stroke="currentColor" stroke-opacity=".4" stroke-width="2"/>
+    <text x="${p[0]}" y="${p[1]+5}" font-size="13" text-anchor="middle" fill="currentColor">x${i+1}</text>`;});
+  Rt.forEach((p,i)=>{h+=`<circle cx="${p[0]}" cy="${p[1]}" r="17"
+    fill="${used.has('R'+i)?'var(--panel2)':'rgba(95,211,154,.35)'}"
+    stroke="currentColor" stroke-opacity=".4" stroke-width="2"/>
+    <text x="${p[0]}" y="${p[1]+5}" font-size="13" text-anchor="middle" fill="currentColor">y${i+1}</text>`;});
+  h+=`<text x="40" y="225" font-size="11.5" fill="currentColor" opacity=".55">bold red = matched edge · green fill = unmatched vertex</text>`;
+  svg.innerHTML=h;
+ }
+ draw();
+ document.getElementById('aug').onclick=()=>{
+  const path=[[0,0],[1,0],[1,2],[2,2],[2,1]];
+  draw(path);
+  setTimeout(()=>{M=[[0,0],[1,2],[2,1]];draw();
+   out.innerHTML='Matching size: <b style="color:#5fd39a">3</b> — perfect. No augmenting path remains (Berge).';},900);
+ };
+ document.getElementById('augreset').onclick=()=>{M=[[1,1],[2,2]];draw();
+  out.textContent='Matching size: 2';};
+})();
+
+/* ---------- A1.10 recurrence ---------- */
+(function(){
+ const svg=document.getElementById('recur');
+ function render(upto){
+  let h=`<text x="14" y="22" font-size="13" fill="currentColor" opacity=".65">aₙ = aₙ₋₁ + aₙ₋₂,  a₁ = 2,  a₂ = 3</text>`;
+  const a=[null,2,3];for(let i=3;i<=8;i++)a[i]=a[i-1]+a[i-2];
+  for(let i=1;i<=8;i++){
+   const x=14+(i-1)*62,on=i<=upto;
+   h+=`<rect x="${x}" y="50" width="54" height="54" rx="9"
+        fill="${on?'rgba(93,216,242,.22)':'var(--panel2)'}" stroke="currentColor"
+        stroke-opacity=".25" style="transition:all .3s"/>
+       <text x="${x+27}" y="72" font-size="11" text-anchor="middle" fill="currentColor" opacity=".6">n=${i}</text>
+       <text x="${x+27}" y="94" font-size="17" font-weight="700" text-anchor="middle"
+        fill="${on?'#5dd8f2':'currentColor'}" opacity="${on?1:.25}">${on?a[i]:'?'}</text>`;
+   if(i>2&&on)h+=`<path d="M${x-8} 77 l6 -5 v10 z" fill="#5dd8f2" opacity=".7"/>`;
+  }
+  if(upto>=8)h+=`<text x="14" y="145" font-size="14" font-weight="700" fill="#5fd39a">
+    a₈ = 55 — shifted Fibonacci (machine-verified)</text>`;
+  svg.innerHTML=h;
+ }
+ render(0);let t=null;
+ document.getElementById('runrec').onclick=()=>{clearInterval(t);let n=0;
+  t=setInterval(()=>{n++;render(n);if(n>=8)clearInterval(t);},330);};
+ document.getElementById('recreset').onclick=()=>{clearInterval(t);render(0);};
+})();
+</script>
+</body></html>

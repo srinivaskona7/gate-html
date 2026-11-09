@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Module 4 — Probability &amp; Statistics | GATE 2027</title>
+<style>
+:root{--bg:#0f1420;--panel:#171e2e;--panel2:#1e2739;--line:#2b3651;--ink:#e8edf7;
+ --dim:#95a3bd;--accent:#5fd39a;--gold:#ffc766;--green:#5fd39a;--red:#ff7a7a;
+ --cyan:#5dd8f2;--violet:#b48bff;--orange:#ff9f5a}
+@media(prefers-color-scheme:light){:root{--bg:#f4f6fb;--panel:#fff;--panel2:#eef2f9;
+ --line:#d6deec;--ink:#16203a;--dim:#5a6b89;--accent:#1b7f52;--gold:#9a6400;
+ --green:#1b7f52;--red:#c0392b;--cyan:#0a7ea4;--violet:#6f42c1;--orange:#c2560a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.68;
+ font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Segoe UI,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:28px 20px 90px}
+a.back{color:var(--accent);text-decoration:none;font-size:14px}
+h1{font-size:clamp(26px,5vw,38px);margin:14px 0 6px}
+.lead{color:var(--dim);font-size:16.5px;margin-top:0}
+h2{font-size:22px;margin:40px 0 12px;padding-top:14px;border-top:1px solid var(--line)}
+h3{font-size:17px;margin:26px 0 8px;color:var(--accent)}
+p{font-size:15.5px}
+.m{font-family:"Latin Modern Math",Cambria Math,Georgia,serif;font-style:italic}
+table{width:100%;border-collapse:collapse;font-size:14.5px;margin:14px 0}
+th,td{padding:8px 11px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--accent);font-size:12px;text-transform:uppercase;letter-spacing:.7px}
+td.n{font-variant-numeric:tabular-nums}
+.demo{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:20px;margin:22px 0}
+.demo h4{margin:0 0 4px;font-size:15px;color:var(--gold)}
+.demo .cap{color:var(--dim);font-size:13.5px;margin:0 0 14px}
+button{background:var(--accent);color:#06131a;border:0;padding:8px 17px;border-radius:9px;
+ font-weight:650;font-size:14px;cursor:pointer;font-family:inherit}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+button:hover{filter:brightness(1.12)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.note{border-left:3px solid var(--gold);background:var(--panel2);padding:13px 17px;
+ border-radius:0 10px 10px 0;margin:16px 0;font-size:14.5px}
+.note b{color:var(--gold)}
+.warn{border-left-color:var(--red)}.warn b{color:var(--red)}
+.prob{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--violet);
+ border-radius:0 14px 14px 0;padding:20px;margin:22px 0}
+.prob .ttl{font-weight:700;color:var(--violet);font-size:14px;letter-spacing:.4px}
+details{margin-top:10px}summary{cursor:pointer;color:var(--cyan);font-size:14px;font-weight:600}
+.ans{background:var(--panel2);border-radius:10px;padding:14px 17px;margin-top:10px;font-size:14.5px}
+svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.anim-note{font-size:13px;color:var(--dim);margin-top:10px;font-style:italic}
+.eq{text-align:center;font-size:17px;margin:16px 0}
+ul li,ol li{font-size:15.5px;margin:5px 0}
+</style>
+</head>
+<body><div class="wrap">
+<a class="back" href="index.html">← All modules</a>
+<h1>Module 4 · Probability &amp; Statistics</h1>
+<p class="lead">Probability quantifies uncertainty on a scale from 0 to 1. Statistics works
+in the opposite direction — from observed data back to the underlying mechanism.</p>
+
+<h2>4.1 Foundations</h2>
+<p>A <b>sample space</b> lists every possible outcome; an <b>event</b> is any subset of it.
+Everything follows from three axioms: probabilities are non-negative, the whole space has
+probability 1, and mutually exclusive events add.</p>
+<div class="note"><b>Always consider the complement first.</b>
+<span class="m">P(E<sup>c</sup>) = 1 − P(E)</span>. Any question containing the phrase
+“at least one” is almost always easier as <span class="m">1 − P(none)</span>.</div>
+
+<h3>Conditional probability</h3>
+<p class="eq m">P(A | B) = P(A ∩ B) / P(B)</p>
+<p>Conditioning <b>shrinks the sample space</b> to B; you are re-measuring A inside that
+smaller world. That one sentence is the entire concept.</p>
+<div class="note warn"><b>Independent ≠ mutually exclusive (trap #12).</b> These are nearly
+opposites. Mutually exclusive events with non-zero probability are <i>strongly dependent</i> —
+if one happens, the other definitely did not.</div>
+
+<div class="demo">
+<h4>▶ Diagram D4.1 · The 36-cell dice grid</h4>
+<p class="cap">All two-dice outcomes. Gold = sum is 7. Toggle the filter to see that
+conditioning on an even first die leaves the probability unchanged — that is independence.</p>
+<svg viewBox="0 0 400 290" id="dice"></svg>
+<div class="row"><button id="dfilter">Condition on “first die is even”</button>
+<span id="dout" style="font-size:14.5px;font-weight:600"></span></div>
+</div>
+
+<h3>Bayes' theorem</h3>
+<p class="eq m">P(B | A) = P(A | B)·P(B) / Σ P(A | B<sub>j</sub>)·P(B<sub>j</sub>)</p>
+<table>
+<tr><th>Term</th><th>Name</th><th>Meaning</th></tr>
+<tr><td class="m">P(B)</td><td><b>Prior</b></td><td>belief before seeing evidence</td></tr>
+<tr><td class="m">P(A | B)</td><td><b>Likelihood</b></td><td>how well the hypothesis explains the evidence</td></tr>
+<tr><td class="m">P(B | A)</td><td><b>Posterior</b></td><td>updated belief after the evidence</td></tr>
+<tr><td>denominator</td><td><b>Evidence</b></td><td>normaliser so posteriors sum to 1</td></tr>
+</table>
+<p>Bayes <b>reverses the direction of conditioning</b> — it converts “probability of the symptom
+given the disease” into “probability of the disease given the symptom”. These two are wildly
+different numbers.</p>
+
+<div class="demo">
+<h4>▶ Diagram D4.2 · Bayes as a population of 10,000</h4>
+<p class="cap">The single best cure for the base rate fallacy. Each dot represents about 4 people.
+Press the buttons to apply the test, then isolate everyone who tested positive.
+<b>Dot counts are rounded to the grid</b> — the exact figures are 99 and 495, computed in the solution below.</p>
+<svg viewBox="0 0 420 300" id="bayes"></svg>
+<div class="row"><button id="btest">Apply the test</button>
+<button class="ghost" id="bisolate">Show only positives</button>
+<button class="ghost" id="breset">Reset</button></div>
+<p class="anim-note" id="bout">100 red (diseased) · 9,900 grey (healthy)</p>
+</div>
+
+<div class="prob">
+<div class="ttl">PROBLEM 4.2 · 2 marks</div>
+<p>A disease affects 1% of a population. A test has 99% sensitivity and a 5% false-positive
+rate. Someone tests positive. What is the probability they have the disease?</p>
+<details><summary>Show full solution</summary><div class="ans">
+<p><b>Step 1 — the evidence, by total probability.</b></p>
+<p class="m" style="text-align:center">P(+) = (0.99)(0.01) + (0.05)(0.99) = 0.0099 + 0.0495 = 0.0594</p>
+<p><b>Step 2 — Bayes.</b></p>
+<p class="m" style="text-align:center">P(D | +) = 0.0099 / 0.0594 = <b>1/6 ≈ 0.1667</b></p>
+<p><i>(Computed in exact rational arithmetic.)</i></p>
+<p><b>Why this is counter-intuitive.</b> The test is 99% sensitive, yet a positive result means
+only a 1-in-6 chance of disease. In 10,000 people there are 100 sick (99 test positive) but
+9,900 healthy (495 test positive anyway). The <b>495 false positives swamp the 99 true
+positives</b>. The rarer the disease, the worse this gets. ∎</p>
+</div></details>
+</div>
+
+<div class="prob">
+<div class="ttl">PROBLEMS 4.1 &amp; 4.3 · 1 mark each</div>
+<p><b>4.1</b> Two dice: find P(sum = 7) and P(sum = 7 | first die even). Independent?<br>
+<b>4.3</b> A die is rolled 4 times. P(at least one six)?</p>
+<details><summary>Show solutions</summary><div class="ans">
+<p><b>4.1</b> Sum 7 happens 6 ways out of 36 → <span class="m">1/6</span>. Given the first die is
+even (18 outcomes), the favourable ones are (2,5), (4,3), (6,1) → 3/18 = <span class="m">1/6</span>.
+<b>Equal, so independent.</b> Intuition: whatever the first die shows, exactly one value of the
+second completes a 7. <i>(Both machine-verified.)</i></p>
+<p><b>4.3</b> Use the complement: P(no six once) = 5/6, so P(no six in four) = (5/6)⁴ = 625/1296.
+Therefore <b>P(at least one) = 671/1296 ≈ 0.5177</b> <i>(exact fraction verified)</i>. ∎</p>
+</div></details>
+</div>
+
+<h2>4.2 Random Variables</h2>
+<p>A random variable assigns a number to each outcome, converting outcomes into arithmetic.
+Discrete variables use a <b>probability mass function</b>; continuous ones use a
+<b>density function</b>.</p>
+<div class="note warn"><b>For a continuous variable, P(X = c) = 0 at every single point.</b>
+Probability lives in <i>intervals</i>. Density is not probability — it is probability
+<i>per unit length</i>, and it may exceed 1.</div>
+<p class="eq m">Var(X) = E[X²] − (E[X])²</p>
+<p><b>Key properties:</b> <span class="m">E[aX + b] = aE[X] + b</span> but
+<span class="m">Var(aX + b) = a²Var(X)</span> — adding a constant shifts the mean but
+<b>not</b> the spread. Also <span class="m">E[X+Y] = E[X]+E[Y]</span> <b>always</b>, even for
+dependent variables, while variances add <b>only when independent</b>.</p>
+
+<h2>4.3 The Five Named Distributions</h2>
+<p>GATE names exactly five. Learn each by its <b>generating story</b> and you never have to
+guess which formula applies.</p>
+<table>
+<tr><th>Question being asked</th><th>Distribution</th><th>Mean</th><th>Variance</th></tr>
+<tr><td>How many successes in n fixed trials?</td><td><b>Binomial</b>(n, p)</td><td class="m">np</td><td class="m">np(1−p)</td></tr>
+<tr><td>How many rare events per interval?</td><td><b>Poisson</b>(λ)</td><td class="m">λ</td><td class="m">λ</td></tr>
+<tr><td>Any value in a range, equally likely?</td><td><b>Uniform</b>(a, b)</td><td class="m">(a+b)/2</td><td class="m">(b−a)²/12</td></tr>
+<tr><td>How long until the next event?</td><td><b>Exponential</b>(λ)</td><td class="m">1/λ</td><td class="m">1/λ²</td></tr>
+<tr><td>Measurement with symmetric error?</td><td><b>Normal</b>(μ, σ²)</td><td class="m">μ</td><td class="m">σ²</td></tr>
+</table>
+<div class="note"><b>Poisson's fingerprint:</b> mean = variance. If a question states both and
+they are equal, it is Poisson.</div>
+
+<div class="demo">
+<h4>▶ Diagram D4.4 · Distribution gallery</h4>
+<p class="cap">Switch between the five. Each shows its shape, story, mean and variance.</p>
+<div class="row" id="dtabs" style="margin-bottom:12px"></div>
+<svg viewBox="0 0 440 230" id="dist"></svg>
+<p class="anim-note" id="distout"></p>
+</div>
+
+<h3>Memorylessness — the exponential's defining property</h3>
+<p class="eq m">P(X &gt; s + t | X &gt; s) = P(X &gt; t)</p>
+<p>A component that has already survived s hours is <b>exactly as good as new</b>. The
+distribution has no concept of wear. This is unique to the exponential among continuous
+distributions.</p>
+
+<div class="demo">
+<h4>▶ Animation A4.4 · Memorylessness</h4>
+<p class="cap">Slide the "already survived" marker. The remaining curve is rescaled and
+overlaid on the original — they coincide exactly, every time.</p>
+<svg viewBox="0 0 440 210" id="memo"></svg>
+<div class="row"><label style="font-size:13.5px">already survived s = <b id="sval">0</b> yr</label>
+<input id="smem" type="range" min="0" max="10" step="0.5" value="0" style="flex:1;accent-color:#5fd39a"></div>
+<p class="anim-note" id="memout"></p>
+</div>
+
+<h3>The normal distribution</h3>
+<p>Standardise with <span class="m">Z = (X − μ)/σ</span> — Z counts <b>how many standard
+deviations above the mean</b> a value lies, which is why one Z-table serves every normal
+distribution.</p>
+<table>
+<tr><th>Range</th><th>Exact probability</th></tr>
+<tr><td class="m">μ ± 1σ</td><td class="n">0.682689</td></tr>
+<tr><td class="m">μ ± 2σ</td><td class="n">0.954500</td></tr>
+<tr><td class="m">μ ± 3σ</td><td class="n">0.997300</td></tr>
+</table>
+<p><i>All three machine-computed via the error function.</i></p>
+
+<div class="demo">
+<h4>▶ Animation A4.3 · The Central Limit Theorem machine</h4>
+<p class="cap">The population at the top is deliberately ugly — bimodal, nothing like a bell.
+Draw samples of size n and histogram their <i>means</i>. Watch a bell appear from nothing.</p>
+<svg viewBox="0 0 440 290" id="clt"></svg>
+<div class="row">
+ <label style="font-size:13.5px">sample size n = <b id="nn">1</b></label>
+ <input id="cltn" type="range" min="1" max="30" value="1" style="flex:1;accent-color:#5fd39a">
+ <button id="cltrun">Draw 600 samples</button>
+</div>
+<p class="anim-note" id="cltout"></p>
+</div>
+
+<div class="prob">
+<div class="ttl">PROBLEMS 4.4 – 4.8 · mixed</div>
+<p><b>4.4</b> X ~ Binomial(10, 0.3): find P(X=3), P(X≤2), mean, variance.<br>
+<b>4.5</b> Calls arrive Poisson at 2/min: find P(0), P(2), P(at least 1).<br>
+<b>4.6</b> Bulb life exponential, mean 5 yr: P(&gt;8), and P(&gt;13 | already 5).<br>
+<b>4.7</b> Marks ~ N(70, 8): what fraction score above 86?<br>
+<b>4.8</b> X ~ Uniform(2, 10): mean, variance, P(X &gt; 7).</p>
+<details><summary>Show all solutions</summary><div class="ans">
+<p><b>4.4</b> P(X=3) = C(10,3)(0.3)³(0.7)⁷ = <b>0.266828</b>; P(X≤2) = <b>0.382783</b>;
+mean = np = <b>3</b>; variance = np(1−p) = <b>2.1</b>.
+<i>(All machine-computed; the full pmf was verified to sum to exactly 1.)</i>
+Note P(X=3) is the largest single probability — which makes sense, since the mean is 3.</p>
+<p><b>4.5</b> P(0) = e⁻² = <b>0.135335</b>; P(2) = 2e⁻² = <b>0.270671</b>;
+P(≥1) = 1 − 0.135335 = <b>0.864665</b>. Note P(1) = P(2) exactly — this happens whenever
+λ = 2, since the ratio P(k)/P(k−1) = λ/k equals 1 at k = λ.</p>
+<p><b>4.6</b> λ = 1/5 = 0.2, so P(X&gt;8) = e⁻¹·⁶ = <b>0.201897</b>. By memorylessness
+P(X&gt;13 | X&gt;5) = P(X&gt;8) = <b>0.201897</b> — identical <i>(both verified)</i>.
+The five years of service left no trace.</p>
+<p><b>4.7</b> Z = (86 − 70)/8 = 2, so P = ½(1 − 0.9545) = <b>0.02275</b>, about <b>2.3%</b>.
+This matches the empirical rule: 4.55% lies outside ±2σ, and half of that is in the upper tail.</p>
+<p><b>4.8</b> Mean = 6; variance = 64/12 = <b>5.3333</b>; P(X&gt;7) = 3/8 = <b>0.375</b>.
+For a uniform, probability is just the fraction of the interval's length. ∎</p>
+</div></details>
+</div>
+
+<h2>4.4 Descriptive Statistics</h2>
+<table>
+<tr><th>Measure</th><th>Best used when</th></tr>
+<tr><td><b>Mean</b></td><td>data is symmetric; uses every value, but outliers drag it</td></tr>
+<tr><td><b>Median</b></td><td>data is <b>skewed or has outliers</b> — it is robust</td></tr>
+<tr><td><b>Mode</b></td><td>categorical data; may not exist or may be multiple</td></tr>
+</table>
+<div class="note"><b>Why n − 1 for a sample variance (trap #14)?</b> You already used the data to
+estimate the mean, consuming one <b>degree of freedom</b>. Dividing by n would systematically
+under-estimate the true variance; n − 1 corrects that bias. GATE expects the population formula
+unless the word “sample” appears.</div>
+
+<div class="demo">
+<h4>▶ Diagram D4.6 · Mean, median and mode under skew</h4>
+<p class="cap">Drag the skew. Watch the long tail drag the mean away while the median holds.</p>
+<svg viewBox="0 0 440 220" id="skew"></svg>
+<div class="row"><label style="font-size:13.5px">skew</label>
+<input id="skr" type="range" min="-1" max="1" step="0.05" value="0.6" style="flex:1;accent-color:#5fd39a"></div>
+<p class="anim-note" id="skout"></p>
+</div>
+
+<div class="prob">
+<div class="ttl">PROBLEM 4.9 · 2 marks</div>
+<p>For {4, 8, 6, 5, 3, 8, 9, 1} find the mean, median, mode, population variance and both
+standard deviations.</p>
+<details><summary>Show full solution</summary><div class="ans">
+<p><b>Sorted:</b> 1, 3, 4, 5, 6, 8, 8, 9 (n = 8).</p>
+<p><b>Mean</b> = 44/8 = <b>5.5</b>. <b>Median</b> = (5+6)/2 = <b>5.5</b>. <b>Mode</b> = <b>8</b>.</p>
+<p><b>Variance</b> via the shortcut, with Σx² = 296:</p>
+<p class="m" style="text-align:center">σ² = 296/8 − 5.5² = 37 − 30.25 = <b>6.75</b></p>
+<p><i>Verified both by the definition and by the E[X²] − μ² shortcut — they agree.</i></p>
+<p><b>Population SD</b> = √6.75 = <b>2.598076</b>.
+<b>Sample SD</b> = √(8/7 × 6.75) = <b>2.774460</b>.</p>
+<p>The sample SD is larger, exactly as Bessel's correction guarantees. Mean = median here,
+indicating a roughly symmetric distribution. ∎</p>
+</div></details>
+</div>
+
+<p style="margin-top:48px"><a class="back" href="m3-calculus.html">← Module 3</a> &nbsp;·&nbsp;
+<a class="back" href="index.html">All modules</a></p>
+</div>
+
+<script>
+/* ---- D4.1 dice ---- */
+(function(){
+ const svg=document.getElementById('dice'),out=document.getElementById('dout');
+ let filt=false;
+ function draw(){
+  let h='',fav=0,tot=0;
+  for(let i=1;i<=6;i++)for(let j=1;j<=6;j++){
+   const inSet=!filt||i%2===0;
+   const seven=(i+j===7);
+   if(inSet){tot++;if(seven)fav++;}
+   h+=`<rect x="${40+(j-1)*55}" y="${30+(i-1)*38}" width="51" height="34" rx="6"
+     fill="${seven?'#ffc766':'var(--panel)'}" fill-opacity="${inSet?(seven?.85:.5):.08}"
+     stroke="currentColor" stroke-opacity="${inSet?.25:.07}"/>
+     <text x="${65+(j-1)*55}" y="${52+(i-1)*38}" font-size="12.5" text-anchor="middle"
+      fill="${seven&&inSet?'#06131a':'currentColor'}" opacity="${inSet?1:.2}">${i+j}</text>`;
+  }
+  h+=`<text x="20" y="22" font-size="11" fill="currentColor" opacity=".55">die 2 →</text>`;
+  h+=`<text x="14" y="60" font-size="11" fill="currentColor" opacity=".55">d1</text>`;
+  h+=`<text x="40" y="280" font-size="12.5" fill="currentColor" opacity=".7">
+      ${fav} favourable / ${tot} outcomes</text>`;
+  svg.innerHTML=h;
+  out.innerHTML=`P = ${fav}/${tot} = <b style="color:#ffc766">1/6</b>`+
+   (filt?' — unchanged by conditioning, so <b style="color:#5fd39a">independent</b>':'');
+ }
+ document.getElementById('dfilter').onclick=e=>{filt=!filt;
+  e.target.textContent=filt?'Remove the condition':'Condition on “first die is even”';draw();};
+ draw();
+})();
+
+/* ---- D4.2 Bayes dot grid ---- */
+(function(){
+ const svg=document.getElementById('bayes'),out=document.getElementById('bout');
+ const C=50,R=50; // 2500 dots, each = 4 people
+ let stage=0;
+ // indices: first 25 dots = diseased (100 people), rest healthy
+ function draw(){
+  let h='';const r=2.6;
+  for(let i=0;i<R;i++)for(let j=0;j<C;j++){
+   const k=i*C+j, dis=k<25;
+   // positives: 99% of diseased (~24.75 of 25 dots), 5% of healthy
+   const pos = dis ? (k<24) : (k%20===3);
+   let fill='#95a3bd',op=.3;
+   if(dis){fill='#ff7a7a';op=.95;}
+   if(stage>=1&&pos){op=1;fill=dis?'#ff7a7a':'#ffc766';}
+   if(stage===2&&!pos){op=.04;}
+   h+=`<circle cx="${18+j*7.6}" cy="${22+i*5.1}" r="${r}" fill="${fill}" opacity="${op}"/>`;
+  }
+  svg.innerHTML=h;
+  if(stage===0)out.textContent='100 red (diseased) · 9,900 grey (healthy). Each dot ≈ 4 people.';
+  if(stage===1)out.innerHTML='Highlighted = tested positive: <b style="color:#ff7a7a">99 true positives</b> (red) and <b style="color:#ffc766">495 false positives</b> (gold).';
+  if(stage===2)out.innerHTML='Of the <b>594</b> positives, only <b style="color:#ff7a7a">99</b> are actually sick → 99/594 = <b>1/6 ≈ 16.7%</b>. The false positives swamp the true ones.';
+ }
+ document.getElementById('btest').onclick=()=>{stage=1;draw();};
+ document.getElementById('bisolate').onclick=()=>{stage=2;draw();};
+ document.getElementById('breset').onclick=()=>{stage=0;draw();};
+ draw();
+})();
+
+/* ---- D4.4 distribution gallery ---- */
+(function(){
+ const svg=document.getElementById('dist'),out=document.getElementById('distout'),
+  tabs=document.getElementById('dtabs');
+ const C=(n,k)=>{let r=1;for(let i=0;i<k;i++)r=r*(n-i)/(i+1);return r;};
+ const D={
+  Binomial:{bars:[...Array(11)].map((_,k)=>C(10,k)*0.3**k*0.7**(10-k)),
+   s:'10 trials, each succeeding with p = 0.3. Mean np = 3, variance np(1−p) = 2.1.'},
+  Poisson:{bars:[...Array(9)].map((_,k)=>Math.exp(-2)*2**k/[1,1,2,6,24,120,720,5040,40320][k]),
+   s:'Rare events at rate λ = 2 per interval. Mean = variance = 2 — the Poisson fingerprint.'},
+  Uniform:{curve:x=>(x>=2&&x<=10)?0.125:0,xmin:0,xmax:12,
+   s:'Every value in [2,10] equally likely. Mean 6, variance 64/12 = 5.333.'},
+  Exponential:{curve:x=>0.2*Math.exp(-0.2*x),xmin:0,xmax:25,
+   s:'Waiting time, rate λ = 0.2. Mean 1/λ = 5, variance 1/λ² = 25. Memoryless.'},
+  Normal:{curve:x=>Math.exp(-((x-70)**2)/(2*64))/(8*Math.sqrt(2*Math.PI)),xmin:40,xmax:100,
+   s:'Measurement error. Mean 70, σ = 8. 68.27% within ±1σ, 95.45% within ±2σ.'}};
+ let cur='Binomial';
+ Object.keys(D).forEach(k=>{
+  const b=document.createElement('button');b.textContent=k;
+  b.className=k===cur?'':'ghost';b.onclick=()=>{cur=k;
+   [...tabs.children].forEach(c=>c.className='ghost');b.className='';draw();};
+  tabs.appendChild(b);});
+ function draw(){
+  const d=D[cur];let h='';
+  h+=`<line x1="30" y1="190" x2="420" y2="190" stroke="currentColor" stroke-opacity=".3"/>`;
+  if(d.bars){
+   const mx=Math.max(...d.bars),w=360/d.bars.length;
+   d.bars.forEach((v,k)=>{const ht=v/mx*145;
+    h+=`<rect x="${34+k*w}" y="${190-ht}" width="${w-5}" height="${ht}" rx="3"
+      fill="#5fd39a" fill-opacity=".55" stroke="#5fd39a"/>
+      <text x="${34+k*w+(w-5)/2}" y="205" font-size="10" text-anchor="middle"
+       fill="currentColor" opacity=".55">${k}</text>`;});
+  }else{
+   let mx=0;for(let i=0;i<=200;i++){const x=d.xmin+(d.xmax-d.xmin)*i/200;mx=Math.max(mx,d.curve(x));}
+   let p='',fill='';
+   for(let i=0;i<=200;i++){const x=d.xmin+(d.xmax-d.xmin)*i/200;
+    const px=34+360*i/200, py=190-d.curve(x)/mx*145;
+    p+=(p?'L':'M')+px+' '+py+' ';}
+   fill=p+`L394 190 L34 190 Z`;
+   h+=`<path d="${fill}" fill="#5fd39a" fill-opacity=".25"/>
+       <path d="${p}" fill="none" stroke="#5fd39a" stroke-width="2.6"/>`;
+  }
+  svg.innerHTML=h;out.textContent=d.s;
+ }
+ draw();
+})();
+
+/* ---- A4.4 memorylessness ---- */
+(function(){
+ const svg=document.getElementById('memo'),out=document.getElementById('memout'),
+  sl=document.getElementById('smem'),sv=document.getElementById('sval');
+ const lam=0.2;
+ function draw(){
+  const s=+sl.value;sv.textContent=s.toFixed(1);
+  const X=x=>35+x*15.4,Y=y=>180-y*160;
+  let p='',q='';
+  for(let x=0;x<=25;x+=0.2)p+=(p?'L':'M')+X(x)+' '+Y(Math.exp(-lam*x))+' ';
+  for(let x=0;x<=25-s;x+=0.2)q+=(q?'L':'M')+X(x)+' '+Y(Math.exp(-lam*x))+' ';
+  let h=`<line x1="30" y1="180" x2="425" y2="180" stroke="currentColor" stroke-opacity=".3"/>
+   <path d="${p}" fill="none" stroke="currentColor" stroke-width="2" stroke-opacity=".4"/>`;
+  h+=`<path d="${q}" fill="none" stroke="#5fd39a" stroke-width="3" stroke-dasharray="7 5"/>`;
+  h+=`<line x1="${X(s)}" y1="20" x2="${X(s)}" y2="180" stroke="#ffc766" stroke-dasharray="4 4"/>`;
+  h+=`<text x="${X(s)+5}" y="32" font-size="12" fill="#ffc766">s = ${s.toFixed(1)}</text>`;
+  h+=`<text x="35" y="200" font-size="11" fill="currentColor" opacity=".55">0</text>
+      <text x="380" y="200" font-size="11" fill="currentColor" opacity=".55">25 yr</text>`;
+  svg.innerHTML=h;
+  out.innerHTML=`The rescaled remaining curve (green dashes) lies <b>exactly</b> on the original.
+   P(X&gt;${(s+8).toFixed(1)} | X&gt;${s.toFixed(1)}) = P(X&gt;8) = <b style="color:#5fd39a">${Math.exp(-1.6).toFixed(6)}</b> — independent of s.`;
+ }
+ sl.oninput=draw;draw();
+})();
+
+/* ---- A4.3 CLT ---- */
+(function(){
+ const svg=document.getElementById('clt'),out=document.getElementById('cltout'),
+  sl=document.getElementById('cltn'),nv=document.getElementById('nn');
+ // bimodal population
+ const pop=()=>Math.random()<0.5?0.1+Math.random()*0.22:0.68+Math.random()*0.25;
+ let hist=[];
+ function sample(){
+  const n=+sl.value;hist=new Array(34).fill(0);
+  for(let i=0;i<600;i++){let s=0;for(let j=0;j<n;j++)s+=pop();
+   const m=s/n;const b=Math.min(33,Math.max(0,Math.floor(m*34)));hist[b]++;}
+ }
+ function draw(){
+  const n=+sl.value;nv.textContent=n;
+  let h='';
+  // population strip
+  const pb=new Array(34).fill(0);
+  for(let i=0;i<4000;i++){const b=Math.min(33,Math.floor(pop()*34));pb[b]++;}
+  const pmx=Math.max(...pb);
+  pb.forEach((v,k)=>{const ht=v/pmx*52;
+   h+=`<rect x="${30+k*11.4}" y="${72-ht}" width="10" height="${ht}" fill="#95a3bd" opacity=".6"/>`;});
+  h+=`<text x="30" y="16" font-size="11.5" fill="currentColor" opacity=".6">population — bimodal, not a bell</text>`;
+  h+=`<line x1="25" y1="72" x2="420" y2="72" stroke="currentColor" stroke-opacity=".25"/>`;
+  const mx=Math.max(...hist,1);
+  hist.forEach((v,k)=>{const ht=v/mx*155;
+   h+=`<rect x="${30+k*11.4}" y="${255-ht}" width="10" height="${ht}" rx="2"
+     fill="#5fd39a" fill-opacity=".65" stroke="#5fd39a" stroke-opacity=".8"/>`;});
+  h+=`<line x1="25" y1="255" x2="420" y2="255" stroke="currentColor" stroke-opacity=".25"/>`;
+  h+=`<text x="30" y="110" font-size="11.5" fill="currentColor" opacity=".6">distribution of the sample mean, n = ${n}</text>`;
+  svg.innerHTML=h;
+  out.innerHTML=n===1
+   ?'At n = 1 the histogram simply mirrors the ugly population.'
+   :`At n = ${n} the sample means have collapsed toward a <b style="color:#5fd39a">bell</b>, narrowing as 1/√n — regardless of the population's shape. That is the CLT.`;
+ }
+ sl.oninput=()=>{sample();draw();};
+ document.getElementById('cltrun').onclick=()=>{sample();draw();};
+ sample();draw();
+})();
+
+/* ---- D4.6 skew ---- */
+(function(){
+ const svg=document.getElementById('skew'),out=document.getElementById('skout'),
+  sl=document.getElementById('skr');
+ function draw(){
+  const k=+sl.value;
+  const f=x=>{const t=(x-5)/2.2-k*0.9;return Math.exp(-t*t/2)*(1+erf(k*t*1.4));};
+  function erf(z){const s=z<0?-1:1;z=Math.abs(z);
+   const t=1/(1+0.3275911*z);
+   const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-z*z);
+   return s*y;}
+  let mx=0,sum=0,wsum=0,pts=[];
+  for(let i=0;i<=300;i++){const x=i/300*12;const v=Math.max(0,f(x));pts.push([x,v]);mx=Math.max(mx,v);sum+=v;wsum+=v*x;}
+  const mean=wsum/sum;
+  let acc=0,median=0;for(const[x,v]of pts){acc+=v;if(acc>=sum/2){median=x;break;}}
+  let mode=pts.reduce((a,b)=>b[1]>a[1]?b:a)[0];
+  const X=x=>30+x*32.5,Y=v=>175-v/mx*140;
+  let p='';pts.forEach(([x,v],i)=>p+=(i?'L':'M')+X(x)+' '+Y(v)+' ');
+  let h=`<path d="${p}L${X(12)} 175 L${X(0)} 175 Z" fill="#5fd39a" fill-opacity=".2"/>
+   <path d="${p}" fill="none" stroke="#5fd39a" stroke-width="2.4"/>
+   <line x1="25" y1="175" x2="425" y2="175" stroke="currentColor" stroke-opacity=".3"/>`;
+  [[mode,'#b48bff','mode'],[median,'#ffc766','median'],[mean,'#ff7a7a','mean']].forEach((m,i)=>{
+   h+=`<line x1="${X(m[0])}" y1="${35+i*0}" x2="${X(m[0])}" y2="175" stroke="${m[1]}"
+     stroke-width="2" stroke-dasharray="5 4"/>
+     <text x="${X(m[0])}" y="${28+i*14}" font-size="11.5" text-anchor="middle" fill="${m[1]}">${m[2]}</text>`;});
+  svg.innerHTML=h;
+  const d=mean-median;
+  out.innerHTML=Math.abs(d)<0.08
+   ?'Symmetric: <b>mean = median = mode</b>.'
+   :(d>0?'Right-skewed: the long tail <b style="color:#ff7a7a">drags the mean</b> above the median. Order: mode &lt; median &lt; mean.'
+        :'Left-skewed: order reverses — mean &lt; median &lt; mode.')+
+    ` This is why <b style="color:#ffc766">median</b> is the honest measure for incomes and response times.`;
+ }
+ sl.oninput=draw;draw();
+})();
+</script>
+</body></html>

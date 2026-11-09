@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Module 2 — Linear Algebra | GATE 2027</title>
+<style>
+:root{--bg:#0f1420;--panel:#171e2e;--panel2:#1e2739;--line:#2b3651;--ink:#e8edf7;
+ --dim:#95a3bd;--accent:#b48bff;--gold:#ffc766;--green:#5fd39a;--red:#ff7a7a;
+ --cyan:#5dd8f2;--orange:#ff9f5a}
+@media(prefers-color-scheme:light){:root{--bg:#f4f6fb;--panel:#fff;--panel2:#eef2f9;
+ --line:#d6deec;--ink:#16203a;--dim:#5a6b89;--accent:#6f42c1;--gold:#9a6400;
+ --green:#1b7f52;--red:#c0392b;--cyan:#0a7ea4;--orange:#c2560a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.68;
+ font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Segoe UI,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:28px 20px 90px}
+a.back{color:var(--accent);text-decoration:none;font-size:14px}
+h1{font-size:clamp(26px,5vw,38px);margin:14px 0 6px}
+.lead{color:var(--dim);font-size:16.5px;margin-top:0}
+h2{font-size:22px;margin:40px 0 12px;padding-top:14px;border-top:1px solid var(--line)}
+h3{font-size:17px;margin:26px 0 8px;color:var(--accent)}
+p{font-size:15.5px}
+.m{font-family:"Latin Modern Math",Cambria Math,Georgia,serif;font-style:italic}
+code{background:var(--panel2);padding:2px 6px;border-radius:5px;font-size:13.5px;
+ font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-style:normal}
+table{width:100%;border-collapse:collapse;font-size:14.5px;margin:14px 0}
+th,td{padding:8px 11px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--accent);font-size:12px;text-transform:uppercase;letter-spacing:.7px}
+.demo{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:20px;margin:22px 0}
+.demo h4{margin:0 0 4px;font-size:15px;color:var(--gold)}
+.demo .cap{color:var(--dim);font-size:13.5px;margin:0 0 14px}
+button{background:var(--accent);color:#fff;border:0;padding:8px 17px;border-radius:9px;
+ font-weight:650;font-size:14px;cursor:pointer;font-family:inherit}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+button:hover{filter:brightness(1.12)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.note{border-left:3px solid var(--gold);background:var(--panel2);padding:13px 17px;
+ border-radius:0 10px 10px 0;margin:16px 0;font-size:14.5px}
+.note b{color:var(--gold)}
+.warn{border-left-color:var(--red)}.warn b{color:var(--red)}
+.prob{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);
+ border-radius:0 14px 14px 0;padding:20px;margin:22px 0}
+.prob .ttl{font-weight:700;color:var(--accent);font-size:14px;letter-spacing:.4px}
+details{margin-top:10px}
+summary{cursor:pointer;color:var(--cyan);font-size:14px;font-weight:600}
+.ans{background:var(--panel2);border-radius:10px;padding:14px 17px;margin-top:10px;font-size:14.5px}
+svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.anim-note{font-size:13px;color:var(--dim);margin-top:10px;font-style:italic}
+.mat{display:inline-grid;gap:3px;vertical-align:middle;margin:0 6px;
+ border-left:2px solid var(--dim);border-right:2px solid var(--dim);padding:5px 8px;border-radius:4px}
+.mat span{text-align:center;font-variant-numeric:tabular-nums;font-size:14px;min-width:30px}
+ul li{font-size:15.5px;margin:5px 0}
+ol li{font-size:15.5px;margin:5px 0}
+.eq{text-align:center;font-size:17px;margin:16px 0}
+</style>
+</head>
+<body><div class="wrap">
+<a class="back" href="index.html">← All modules</a>
+<h1>Module 2 · Linear Algebra</h1>
+<p class="lead">The study of linear transformations — operations that stretch, rotate,
+project and shear space without bending straight lines. A matrix is just a table of numbers
+that <i>encodes</i> such a transformation. Hold that sentence and most of this module becomes
+geometry rather than memorisation.</p>
+
+<h2>2.1 Matrices</h2>
+<p>A matrix is a rectangular array with m rows and n columns. Three equally valid readings,
+all useful:</p>
+<ol>
+<li><b>A table of data</b> — the bookkeeping view.</li>
+<li><b>A system of equations</b> in compact form — the algebraic view.</li>
+<li><b>A function that transforms vectors</b> — the geometric view, and the one that explains everything else.</li>
+</ol>
+
+<h3>Multiplication</h3>
+<p class="eq m">c<sub>ij</sub> = Σ<sub>k</sub> a<sub>ik</sub> b<sub>kj</sub></p>
+<p>The <b>inner dimensions must match</b> and they vanish; the outer dimensions survive.
+Row i of A is dotted with column j of B.</p>
+
+<div class="demo">
+<h4>▶ Diagram D2.1 · Multiplication choreography</h4>
+<p class="cap">Click any cell of the product to see which row and column produce it.</p>
+<svg viewBox="0 0 500 250" id="mult"></svg>
+<p class="anim-note" id="multout">Click a result cell…</p>
+</div>
+
+<div class="note warn"><b>Three facts that cost marks.</b>
+<span class="m">AB ≠ BA</span> in general. <span class="m">AB = 0</span> does <b>not</b> imply
+A = 0 or B = 0. And both <span class="m">(AB)ᵀ = BᵀAᵀ</span> and
+<span class="m">(AB)⁻¹ = B⁻¹A⁻¹</span> <i>reverse the order</i>.</div>
+
+<h3>Special matrices</h3>
+<table>
+<tr><th>Name</th><th>Defining condition</th></tr>
+<tr><td>Symmetric</td><td class="m">Aᵀ = A</td></tr>
+<tr><td>Skew-symmetric</td><td class="m">Aᵀ = −A (forces a zero diagonal)</td></tr>
+<tr><td>Orthogonal</td><td class="m">AᵀA = I, so A⁻¹ = Aᵀ; det = ±1</td></tr>
+<tr><td>Idempotent</td><td class="m">A² = A (a projection)</td></tr>
+<tr><td>Nilpotent</td><td class="m">Aᵏ = 0 for some k</td></tr>
+<tr><td>Involutory</td><td class="m">A² = I</td></tr>
+<tr><td>Singular</td><td class="m">det(A) = 0 — no inverse</td></tr>
+</table>
+
+<h3>Rank</h3>
+<p>Vectors are <b>linearly independent</b> if the only combination giving zero is the all-zero
+one. The <b>rank</b> is the number of independent rows — equivalently columns, since row rank
+always equals column rank.</p>
+<p>Compute it by row-reducing to echelon form and counting non-zero rows. The three
+<b>elementary row operations</b> — swap, scale by a non-zero constant, add a multiple of
+another row — never change the rank.</p>
+
+<h2>2.2 Determinants</h2>
+<p>The determinant is a single scalar. Geometrically, its <b>absolute value is the factor by
+which the matrix scales area or volume</b>, and its <b>sign records whether orientation flipped</b>.</p>
+<div class="note"><b>Why <span class="m">det = 0</span> matters.</b> It means the transformation
+<b>squashes space into a lower dimension</b> — information is destroyed, so nothing can undo it.
+That one idea explains the whole chain:
+<span class="m">det = 0 ⟺ singular ⟺ rows dependent ⟺ rank &lt; n ⟺ Ax = 0 has non-trivial solutions.</span></div>
+
+<div class="demo">
+<h4>▶ Animation A2.3 · Determinant as area</h4>
+<p class="cap">Drag the sliders to reshape the transformation. Watch the unit square become a
+parallelogram, and watch it collapse when the determinant hits zero.</p>
+<svg viewBox="0 0 440 300" id="detdemo"></svg>
+<div class="row">
+ <label style="font-size:13.5px;min-width:60px">a = <b id="la">3</b></label>
+ <input id="sa" type="range" min="-3" max="4" step="0.1" value="3" style="flex:1;accent-color:#b48bff">
+ <label style="font-size:13.5px;min-width:60px">b = <b id="lb">1</b></label>
+ <input id="sb" type="range" min="-3" max="4" step="0.1" value="1" style="flex:1;accent-color:#b48bff">
+</div>
+<div class="row">
+ <label style="font-size:13.5px;min-width:60px">c = <b id="lc">1</b></label>
+ <input id="sc" type="range" min="-3" max="4" step="0.1" value="1" style="flex:1;accent-color:#b48bff">
+ <label style="font-size:13.5px;min-width:60px">d = <b id="ld">2</b></label>
+ <input id="sd" type="range" min="-3" max="4" step="0.1" value="2" style="flex:1;accent-color:#b48bff">
+</div>
+<p class="anim-note" id="detout"></p>
+</div>
+
+<h3>Properties that save time</h3>
+<table>
+<tr><th>#</th><th>Property</th></tr>
+<tr><td>1</td><td class="m">det(Aᵀ) = det(A)</td></tr>
+<tr><td>2</td><td>Swapping two rows <b>flips the sign</b></td></tr>
+<tr><td>3</td><td class="m">det(kA) = kⁿ det(A) for order n</td></tr>
+<tr><td>4</td><td>Adding a multiple of one row to another <b>changes nothing</b> — the workhorse</td></tr>
+<tr><td>5</td><td>Identical, proportional or zero row ⟹ det = 0</td></tr>
+<tr><td>6</td><td>Triangular ⟹ det = product of the diagonal</td></tr>
+<tr><td>7</td><td class="m">det(AB) = det(A)det(B); det(A⁻¹) = 1/det(A)</td></tr>
+<tr><td>8</td><td class="m">det(A) = Πλᵢ and tr(A) = Σλᵢ</td></tr>
+</table>
+
+<div class="prob">
+<div class="ttl">PROBLEM 2.1 · 1 mark</div>
+<p>Compute the determinant of
+<span class="mat" style="grid-template-columns:repeat(3,auto)">
+<span>2</span><span>1</span><span>1</span><span>1</span><span>3</span><span>2</span><span>1</span><span>0</span><span>0</span></span></p>
+<details><summary>Show solution</summary><div class="ans">
+<p>Expand along <b>row 3</b> — it has two zeros, so there is only one term to compute:</p>
+<p class="m" style="text-align:center">det = 1·(−1)<sup>3+1</sup>·(1·2 − 1·3) = 1·(−1) = <b>−1</b></p>
+<p><i>(Machine-verified by full recursive cofactor expansion.)</i> Since det ≠ 0, the matrix is
+non-singular with rank 3. Always expand along the row or column with the most zeros. ∎</p>
+</div></details>
+</div>
+
+<h2>2.3 Systems of Linear Equations</h2>
+<h3>The complete consistency rule</h3>
+<p>Let <span class="m">r</span> = rank(A), <span class="m">rₐ</span> = rank of the augmented
+matrix, with n unknowns.</p>
+<table>
+<tr><th>Condition</th><th>Outcome</th></tr>
+<tr><td class="m">r ≠ rₐ</td><td style="color:var(--red)"><b>Inconsistent</b> — no solution</td></tr>
+<tr><td class="m">r = rₐ = n</td><td style="color:var(--green)"><b>Unique</b> solution</td></tr>
+<tr><td class="m">r = rₐ &lt; n</td><td style="color:var(--gold)"><b>Infinitely many</b>, with n − r free parameters</td></tr>
+</table>
+<p>A homogeneous system always has <span class="m">rₐ = r</span>, so it is never inconsistent.
+For a square homogeneous system, non-trivial solutions exist <b>iff det(A) = 0</b>.</p>
+
+<div class="demo">
+<h4>▶ Diagram D2.3 · The three fates of a 3×3 system</h4>
+<p class="cap">Each equation is a plane. Three planes can meet at a point, share a line, or
+never meet at all.</p>
+<svg viewBox="0 0 470 190" id="planes"></svg>
+</div>
+
+<div class="demo">
+<h4>▶ Animation A2.2 · Gaussian elimination, step by step</h4>
+<p class="cap">The augmented matrix from Problem 2.2 with k = 7. Each row operation is
+announced, then applied.</p>
+<div id="gauss" style="font-family:ui-monospace,Menlo,monospace;font-size:15px;
+ line-height:2.1;text-align:center;letter-spacing:1px"></div>
+<div class="row"><button id="gstep">Next operation</button>
+<button class="ghost" id="greset">Reset</button>
+<span id="gmsg" style="font-size:14px;color:var(--gold)"></span></div>
+</div>
+
+<div class="prob">
+<div class="ttl">PROBLEM 2.2 · 2 marks</div>
+<p>For what k does this system have <b>no</b> solution?</p>
+<p class="m" style="text-align:center">x + y + z = 3 &nbsp;·&nbsp; x + 2y + 3z = 4 &nbsp;·&nbsp; x + 4y + kz = 6</p>
+<details><summary>Show solution</summary><div class="ans">
+<p>After <span class="m">R₂ − R₁</span>, <span class="m">R₃ − R₁</span>, then
+<span class="m">R₃ − 3R₂</span>, the last row reads <span class="m">(k − 7)z = 0</span>.</p>
+<ul>
+<li><span class="m">k ≠ 7</span>: z = 0, <b>unique</b> solution.</li>
+<li><span class="m">k = 7</span>: the row becomes 0 = 0, so r = rₐ = 2 &lt; 3 ⟹ <b>infinitely many</b>.</li>
+</ul>
+<p><b>The answer is that no value of k makes it inconsistent.</b> The augmented entry is 0 in
+every case, so rₐ can never exceed r. Assuming a parameter <i>must</i> produce inconsistency is
+trap #8 on the master list and a recurring GATE device. ∎</p>
+</div></details>
+</div>
+
+<h2>2.4 Eigenvalues and Eigenvectors</h2>
+<p>Most vectors get knocked off their line when a matrix acts on them. A few special vectors
+do not — they are only <b>stretched or shrunk</b>, staying on their own span. Those are the
+<b>eigenvectors</b>, and the stretch factor is the <b>eigenvalue</b>.</p>
+<p class="eq m">Av = λv,  v ≠ 0</p>
+<p>For a non-zero v to exist, <span class="m">(A − λI)</span> must be singular:</p>
+<p class="eq m" style="font-size:19px"><b>det(A − λI) = 0</b></p>
+<p>For 2×2 there is a shortcut worth memorising:
+<span class="m">λ² − tr(A)·λ + det(A) = 0</span>.</p>
+
+<div class="demo">
+<h4>▶ Animation A2.1 · The eigenvector hunt</h4>
+<p class="cap">Every grey arrow is a unit input vector; every coloured arrow is its image under
+<span class="m">B = [[4,1],[2,3]]</span>. Press play and watch for the two directions where
+input and output stay on the <b>same line</b>.</p>
+<svg viewBox="0 0 400 400" id="eigen"></svg>
+<div class="row"><button id="espin">Sweep all directions</button>
+<button class="ghost" id="esnap">Snap to eigenvectors</button></div>
+<p class="anim-note" id="eout">Grey = input · Violet = output. Gold = eigen-direction found.</p>
+</div>
+
+<h3>Properties — high frequency in GATE</h3>
+<ul>
+<li><span class="m">Σλᵢ = tr(A)</span> and <span class="m">Πλᵢ = det(A)</span> — instant sanity checks.</li>
+<li>A is singular ⟺ 0 is an eigenvalue.</li>
+<li>Triangular or diagonal ⟹ eigenvalues <b>are</b> the diagonal entries.</li>
+<li>A and <span class="m">Aᵀ</span> share eigenvalues.</li>
+<li>Eigenvalues of <span class="m">Aᵏ</span> are <span class="m">λᵏ</span>; of
+<span class="m">A⁻¹</span> are <span class="m">1/λ</span>; of <span class="m">A + cI</span> are
+<span class="m">λ + c</span> — eigenvectors unchanged in all three.</li>
+<li><b>Real symmetric</b> ⟹ real eigenvalues, orthogonal eigenvectors.</li>
+<li>Always <span class="m">1 ≤ GM ≤ AM</span>. Diagonalisable ⟺ GM = AM for every eigenvalue.</li>
+<li><b>Cayley–Hamilton:</b> every matrix satisfies its own characteristic equation.</li>
+</ul>
+
+<div class="prob">
+<div class="ttl">PROBLEM 2.3 · 2 marks</div>
+<p>Find the eigenvalues and eigenvectors of
+<span class="mat" style="grid-template-columns:repeat(2,auto)"><span>4</span><span>1</span><span>2</span><span>3</span></span></p>
+<details><summary>Show full solution</summary><div class="ans">
+<p><b>Step 1 — characteristic equation.</b> tr = 7, det = 12 − 2 = 10:</p>
+<p class="m" style="text-align:center">λ² − 7λ + 10 = 0 → (λ−5)(λ−2) = 0 → λ = 5, 2</p>
+<p>Checks: 5 + 2 = 7 = tr ✓ and 5 × 2 = 10 = det ✓ <i>(machine-verified)</i>.</p>
+<p><b>Step 2 — eigenvector for λ = 5.</b> <span class="m">B − 5I = [[−1,1],[2,−2]]</span>.
+Row 1 gives <span class="m">v₁ = v₂</span>, so take <span class="m">v = (1, 1)ᵀ</span>.
+Check: <span class="m">Bv = (5, 5)ᵀ = 5v</span> ✓</p>
+<p><b>Step 3 — eigenvector for λ = 2.</b> <span class="m">B − 2I = [[2,1],[2,1]]</span>.
+Row 1 gives <span class="m">v₂ = −2v₁</span>, so take <span class="m">v = (1, −2)ᵀ</span>.
+Check: <span class="m">Bv = (2, −4)ᵀ = 2v</span> ✓</p>
+<p>Distinct eigenvalues ⟹ independent eigenvectors ⟹ B is diagonalisable with
+<span class="m">P = [[1,1],[1,−2]]</span> and <span class="m">D = diag(5, 2)</span>. ∎</p>
+</div></details>
+</div>
+
+<h2>2.5 LU Decomposition</h2>
+<p>Gaussian elimination costs about <span class="m">⅔n³</span> operations. If you must solve
+<span class="m">Ax = b</span> for <b>many different b</b> with the same A — the normal
+engineering situation — repeating that work is wasteful. LU factors A <b>once</b>, then
+handles each new b in only <span class="m">O(n²)</span>.</p>
+<p class="eq m">Ax = b → LUx = b → Ly = b (forward), then Ux = y (back)</p>
+<p><b>Doolittle</b> puts 1s on L's diagonal; <b>Crout</b> puts them on U's. Default to Doolittle.
+Bonus: <span class="m">det(A) = Πuᵢᵢ</span>, the product of U's pivots.</p>
+
+<div class="demo">
+<h4>▶ Animation · LU factorisation and the two-step solve</h4>
+<p class="cap">Problem 2.5 worked live. Watch the multipliers move into L while the
+eliminated matrix becomes U.</p>
+<div id="lu" style="font-family:ui-monospace,Menlo,monospace;font-size:14.5px;line-height:2"></div>
+<div class="row"><button id="lustep">Next step</button>
+<button class="ghost" id="lureset">Reset</button>
+<span id="lumsg" style="font-size:14px;color:var(--gold)"></span></div>
+</div>
+
+<div class="prob">
+<div class="ttl">PROBLEM 2.5 · 2 marks</div>
+<p>Find the LU decomposition of
+<span class="mat" style="grid-template-columns:repeat(3,auto)">
+<span>2</span><span>−1</span><span>−2</span><span>−4</span><span>6</span><span>3</span><span>−4</span><span>−2</span><span>8</span></span>
+and solve <span class="m">Ax = (−6, 17, 16)ᵀ</span>.</p>
+<details><summary>Show full solution</summary><div class="ans">
+<p><b>Step 1 — eliminate column 1.</b> Multipliers
+<span class="m">m₂₁ = −4/2 = −2</span>, <span class="m">m₃₁ = −2</span>.
+Rows become [0, 4, −1] and [0, −4, 4].</p>
+<p><b>Step 2 — eliminate column 2.</b> <span class="m">m₃₂ = −4/4 = −1</span>, giving [0, 0, 3].</p>
+<p><b>Step 3 — assemble.</b>
+L = <span class="mat" style="grid-template-columns:repeat(3,auto)">
+<span>1</span><span>0</span><span>0</span><span>−2</span><span>1</span><span>0</span><span>−2</span><span>−1</span><span>1</span></span>
+U = <span class="mat" style="grid-template-columns:repeat(3,auto)">
+<span>2</span><span>−1</span><span>−2</span><span>0</span><span>4</span><span>−1</span><span>0</span><span>0</span><span>3</span></span>
+<i>(verified: LU = A exactly, in rational arithmetic)</i></p>
+<p><b>Step 4 — forward substitution.</b> y₁ = −6; then 12 + y₂ = 17 → y₂ = 5;
+then 12 − 5 + y₃ = 16 → y₃ = 9.</p>
+<p><b>Step 5 — back substitution.</b> 3x₃ = 9 → x₃ = 3; 4x₂ − 3 = 5 → x₂ = 2;
+2x₁ − 2 − 6 = −6 → x₁ = 1.</p>
+<p class="m" style="text-align:center;font-size:17px"><b>x = (1, 2, 3)ᵀ</b></p>
+<p>Also det(A) = 2 × 4 × 3 = <b>24</b>. <i>(All machine-verified.)</i> ∎</p>
+</div></details>
+</div>
+
+<p style="margin-top:48px"><a class="back" href="m1-discrete.html">← Module 1</a> &nbsp;·&nbsp;
+<a class="back" href="index.html">All modules</a> &nbsp;·&nbsp;
+<a class="back" href="m3-calculus.html">Module 3: Calculus →</a></p>
+</div>
+
+<script>
+/* ---- D2.1 multiplication ---- */
+(function(){
+ const svg=document.getElementById('mult'),out=document.getElementById('multout');
+ const A=[[1,2,3],[4,5,6]],B=[[7,8],[9,10],[11,12]];
+ const C=[[0,0],[0,0]];
+ for(let i=0;i<2;i++)for(let j=0;j<2;j++)C[i][j]=A[i].reduce((s,v,k)=>s+v*B[k][j],0);
+ let sel=null;
+ function draw(){
+  let h='';
+  // B top-right
+  for(let i=0;i<3;i++)for(let j=0;j<2;j++){
+   const on=sel&&sel[1]===j;
+   h+=`<rect x="${300+j*46}" y="${20+i*34}" width="42" height="30" rx="5"
+     fill="${on?'rgba(180,139,255,.35)':'var(--panel)'}" stroke="currentColor" stroke-opacity=".2"/>
+     <text x="${321+j*46}" y="${40+i*34}" font-size="13" text-anchor="middle" fill="currentColor">${B[i][j]}</text>`;
+  }
+  h+=`<text x="300" y="14" font-size="11" fill="currentColor" opacity=".55">B (3×2)</text>`;
+  // A left
+  for(let i=0;i<2;i++)for(let j=0;j<3;j++){
+   const on=sel&&sel[0]===i;
+   h+=`<rect x="${40+j*46}" y="${140+i*34}" width="42" height="30" rx="5"
+     fill="${on?'rgba(93,216,242,.32)':'var(--panel)'}" stroke="currentColor" stroke-opacity=".2"/>
+     <text x="${61+j*46}" y="${160+i*34}" font-size="13" text-anchor="middle" fill="currentColor">${A[i][j]}</text>`;
+  }
+  h+=`<text x="40" y="134" font-size="11" fill="currentColor" opacity=".55">A (2×3)</text>`;
+  // C
+  for(let i=0;i<2;i++)for(let j=0;j<2;j++){
+   const on=sel&&sel[0]===i&&sel[1]===j;
+   h+=`<rect x="${300+j*46}" y="${140+i*34}" width="42" height="30" rx="5"
+     fill="${on?'#b48bff':'var(--panel2)'}" stroke="currentColor" stroke-opacity=".3"
+     style="cursor:pointer" data-i="${i}" data-j="${j}"/>
+     <text x="${321+j*46}" y="${160+i*34}" font-size="13" text-anchor="middle"
+      fill="${on?'#fff':'currentColor'}" style="pointer-events:none">${C[i][j]}</text>`;
+  }
+  h+=`<text x="300" y="134" font-size="11" fill="currentColor" opacity=".55">C = AB (2×2)</text>`;
+  h+=`<text x="40" y="232" font-size="12.5" fill="currentColor" opacity=".6">(2×<tspan font-weight="700" fill="#b48bff">3</tspan>)(<tspan font-weight="700" fill="#b48bff">3</tspan>×2) → 2×2</text>`;
+  svg.innerHTML=h;
+  svg.querySelectorAll('rect[data-i]').forEach(r=>r.onclick=()=>{
+   sel=[+r.dataset.i,+r.dataset.j];draw();
+   const i=sel[0],j=sel[1];
+   out.innerHTML=`c<sub>${i+1}${j+1}</sub> = `+A[i].map((v,k)=>`${v}×${B[k][j]}`).join(' + ')+` = <b>${C[i][j]}</b>`;
+  });
+ }
+ draw();
+})();
+
+/* ---- A2.3 determinant as area ---- */
+(function(){
+ const svg=document.getElementById('detdemo'),out=document.getElementById('detout');
+ const ids=['sa','sb','sc','sd'],labs=['la','lb','lc','ld'];
+ const ox=150,oy=200,u=42;
+ function draw(){
+  const [a,b,c,d]=ids.map(i=>+document.getElementById(i).value);
+  ids.forEach((id,k)=>document.getElementById(labs[k]).textContent=(+document.getElementById(id).value).toFixed(1).replace(/\.0$/,''));
+  const det=a*d-b*c;
+  const P=(x,y)=>[ox+x*u,oy-y*u];
+  const o=P(0,0),v1=P(a,c),v2=P(b,d),v3=P(a+b,c+d);
+  let h='';
+  for(let i=-3;i<=5;i++){
+   h+=`<line x1="${ox+i*u}" y1="20" x2="${ox+i*u}" y2="280" stroke="currentColor" stroke-opacity=".07"/>`;
+   h+=`<line x1="10" y1="${oy-i*u}" x2="430" y2="${oy-i*u}" stroke="currentColor" stroke-opacity=".07"/>`;
+  }
+  h+=`<line x1="10" y1="${oy}" x2="430" y2="${oy}" stroke="currentColor" stroke-opacity=".3"/>`;
+  h+=`<line x1="${ox}" y1="20" x2="${ox}" y2="280" stroke="currentColor" stroke-opacity=".3"/>`;
+  // unit square ghost
+  h+=`<polygon points="${P(0,0)} ${P(1,0)} ${P(1,1)} ${P(0,1)}" fill="currentColor"
+       fill-opacity=".09" stroke="currentColor" stroke-opacity=".3" stroke-dasharray="4 3"/>`;
+  h+=`<polygon points="${o} ${v1} ${v3} ${v2}" fill="${det<0?'#ff9f5a':'#b48bff'}"
+       fill-opacity=".3" stroke="${det<0?'#ff9f5a':'#b48bff'}" stroke-width="2"/>`;
+  h+=`<line x1="${o[0]}" y1="${o[1]}" x2="${v1[0]}" y2="${v1[1]}" stroke="#5dd8f2" stroke-width="3"/>`;
+  h+=`<line x1="${o[0]}" y1="${o[1]}" x2="${v2[0]}" y2="${v2[1]}" stroke="#5fd39a" stroke-width="3"/>`;
+  svg.innerHTML=h;
+  const flat=Math.abs(det)<0.05;
+  out.innerHTML=`det = (${a.toFixed(1)})(${d.toFixed(1)}) − (${b.toFixed(1)})(${c.toFixed(1)}) =
+   <b style="color:${flat?'#ff7a7a':(det<0?'#ff9f5a':'#b48bff')};font-size:15px">${det.toFixed(2)}</b> — `+
+   (flat?'<b style="color:#ff7a7a">collapsed to a line. Dimension lost, no inverse exists.</b>'
+   :(det<0?'area scaled by '+Math.abs(det).toFixed(2)+'×, <b>orientation flipped</b>.'
+          :'area scaled by '+det.toFixed(2)+'×, orientation preserved.'));
+ }
+ ids.forEach(i=>document.getElementById(i).oninput=draw);draw();
+})();
+
+/* ---- D2.3 three planes ---- */
+(function(){
+ const svg=document.getElementById('planes');
+ const cfg=[
+  {t:'Unique',s:'r = rₐ = n',c:'#5fd39a',ang:[[-18,0],[16,0],[0,1]]},
+  {t:'Infinite',s:'r = rₐ < n',c:'#ffc766',ang:[[-14,0],[14,0],[0,0]]},
+  {t:'Inconsistent',s:'r ≠ rₐ',c:'#ff7a7a',ang:[[-16,-14],[16,-14],[0,16]]}];
+ let h='';
+ cfg.forEach((g,k)=>{
+  const cx=80+k*155,cy=95;
+  g.ang.forEach((a,i)=>{
+   const off=a[1]*1.6;
+   h+=`<g transform="translate(${cx},${cy+off}) rotate(${a[0]+i*58})">
+     <ellipse rx="54" ry="17" fill="${g.c}" fill-opacity=".18" stroke="${g.c}" stroke-opacity=".7"/></g>`;
+  });
+  if(k===0)h+=`<circle cx="${cx}" cy="${cy}" r="5" fill="${g.c}"/>`;
+  if(k===1)h+=`<line x1="${cx-40}" y1="${cy}" x2="${cx+40}" y2="${cy}" stroke="${g.c}" stroke-width="3.5"/>`;
+  h+=`<text x="${cx}" y="160" font-size="14" font-weight="700" text-anchor="middle" fill="${g.c}">${g.t}</text>
+      <text x="${cx}" y="178" font-size="12" text-anchor="middle" fill="currentColor" opacity=".6">${g.s}</text>`;
+ });
+ svg.innerHTML=h;
+})();
+
+/* ---- A2.2 gaussian ---- */
+(function(){
+ const box=document.getElementById('gauss'),msg=document.getElementById('gmsg');
+ const states=[
+  {m:[[1,1,1,3],[1,2,3,4],[1,4,7,6]],t:'Start — augmented matrix with k = 7'},
+  {m:[[1,1,1,3],[0,1,2,1],[1,4,7,6]],t:'R₂ → R₂ − R₁'},
+  {m:[[1,1,1,3],[0,1,2,1],[0,3,6,3]],t:'R₃ → R₃ − R₁'},
+  {m:[[1,1,1,3],[0,1,2,1],[0,0,0,0]],t:'R₃ → R₃ − 3R₂  — row vanishes!'}];
+ let i=0;
+ function render(){
+  const s=states[i];
+  box.innerHTML=s.m.map(r=>
+   `<div>[ ${r.slice(0,3).map(v=>String(v).padStart(2)).join('  ')} | ${String(r[3]).padStart(2)} ]</div>`).join('');
+  msg.textContent=s.t;
+  if(i===3)msg.innerHTML=s.t+' <b style="color:#5fd39a">→ r = rₐ = 2 &lt; 3: infinitely many solutions</b>';
+ }
+ document.getElementById('gstep').onclick=()=>{if(i<3){i++;render();}};
+ document.getElementById('greset').onclick=()=>{i=0;render();};
+ render();
+})();
+
+/* ---- A2.1 eigenvector hunt ---- */
+(function(){
+ const svg=document.getElementById('eigen'),out=document.getElementById('eout');
+ const B=[[4,1],[2,3]],cx=200,cy=200,s=26;
+ let shown=[],timer=null;
+ const near=(t,e)=>Math.abs(Math.sin(t-e))<0.06;
+ const e1=Math.atan2(1,1),e2=Math.atan2(-2,1);
+ function draw(){
+  let h=`<line x1="10" y1="${cy}" x2="390" y2="${cy}" stroke="currentColor" stroke-opacity=".2"/>
+         <line x1="${cx}" y1="10" x2="${cx}" y2="390" stroke="currentColor" stroke-opacity=".2"/>`;
+  shown.forEach(t=>{
+   const x=Math.cos(t),y=Math.sin(t);
+   const ox2=B[0][0]*x+B[0][1]*y, oy2=B[1][0]*x+B[1][1]*y;
+   const eig=near(t,e1)||near(t,e2);
+   h+=`<line x1="${cx}" y1="${cy}" x2="${cx+x*s*1.5}" y2="${cy-y*s*1.5}"
+        stroke="currentColor" stroke-opacity=".3" stroke-width="1.5"/>`;
+   h+=`<line x1="${cx}" y1="${cy}" x2="${cx+ox2*s}" y2="${cy-oy2*s}"
+        stroke="${eig?'#ffc766':'#b48bff'}" stroke-width="${eig?3.4:1.6}"
+        stroke-opacity="${eig?1:.65}"/>`;
+  });
+  [[e1,5,'λ = 5'],[e2,2,'λ = 2']].forEach(([t,l,lab])=>{
+   if(shown.some(x=>near(x,t))){
+    const x=Math.cos(t),y=Math.sin(t);
+    h+=`<line x1="${cx-x*160}" y1="${cy+y*160}" x2="${cx+x*160}" y2="${cy-y*160}"
+         stroke="#ffc766" stroke-opacity=".3" stroke-dasharray="6 4"/>
+        <text x="${cx+x*120}" y="${cy-y*120-8}" font-size="13" font-weight="700"
+         fill="#ffc766" text-anchor="middle">${lab}</text>`;
+   }
+  });
+  svg.innerHTML=h;
+ }
+ document.getElementById('espin').onclick=()=>{
+  clearInterval(timer);shown=[];let t=0;
+  timer=setInterval(()=>{shown.push(t);t+=Math.PI/24;draw();
+   if(t>2*Math.PI){clearInterval(timer);
+    out.innerHTML='Two directions kept their line: <b style="color:#ffc766">(1,1) stretched ×5</b> and <b style="color:#ffc766">(1,−2) stretched ×2</b>.';}},55);
+ };
+ document.getElementById('esnap').onclick=()=>{clearInterval(timer);shown=[e1,e2];draw();
+  out.innerHTML='Only these two survive: <b style="color:#ffc766">Av = λv</b> — the output lies exactly along the input line.';};
+ shown=[];for(let t=0;t<2*Math.PI;t+=Math.PI/12)shown.push(t);draw();
+})();
+
+/* ---- LU ---- */
+(function(){
+ const box=document.getElementById('lu'),msg=document.getElementById('lumsg');
+ const st=[
+ {t:'Start: A',L:[[1,0,0],[0,1,0],[0,0,1]],U:[[2,-1,-2],[-4,6,3],[-4,-2,8]]},
+ {t:'m₂₁ = −2 → eliminate',L:[[1,0,0],[-2,1,0],[0,0,1]],U:[[2,-1,-2],[0,4,-1],[-4,-2,8]]},
+ {t:'m₃₁ = −2 → eliminate',L:[[1,0,0],[-2,1,0],[-2,0,1]],U:[[2,-1,-2],[0,4,-1],[0,-4,4]]},
+ {t:'m₃₂ = −1 → done. det = 2·4·3 = 24',L:[[1,0,0],[-2,1,0],[-2,-1,1]],U:[[2,-1,-2],[0,4,-1],[0,0,3]]}];
+ let i=0;
+ const fmt=m=>m.map(r=>'[ '+r.map(v=>String(v).padStart(3)).join(' ')+' ]').join('<br>');
+ function render(){
+  const s=st[i];
+  box.innerHTML=`<div style="display:flex;gap:30px;justify-content:center;flex-wrap:wrap">
+   <div><div style="color:#5dd8f2;font-size:12px;margin-bottom:4px">L</div>${fmt(s.L)}</div>
+   <div><div style="color:#ff9f5a;font-size:12px;margin-bottom:4px">U</div>${fmt(s.U)}</div></div>`;
+  msg.textContent=s.t;
+ }
+ document.getElementById('lustep').onclick=()=>{if(i<3){i++;render();}};
+ document.getElementById('lureset').onclick=()=>{i=0;render();};
+ render();
+})();
+</script>
+</body></html>

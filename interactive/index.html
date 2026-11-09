@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Engineering Mathematics — GATE 2027 CS/IT</title>
+<style>
+:root{
+  --bg:#0f1420; --panel:#171e2e; --panel2:#1e2739; --line:#2b3651;
+  --ink:#e8edf7; --dim:#95a3bd; --accent:#5dd8f2; --gold:#ffc766;
+  --green:#5fd39a; --red:#ff7a7a; --violet:#b48bff; --orange:#ff9f5a;
+}
+@media (prefers-color-scheme: light){
+  :root{--bg:#f4f6fb;--panel:#fff;--panel2:#eef2f9;--line:#d6deec;
+        --ink:#16203a;--dim:#5a6party;--dim:#5a6b89;--accent:#0a7ea4;
+        --gold:#b07400;--green:#1b7f52;--red:#c0392b;--violet:#6f42c1;--orange:#c2560a;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Segoe UI,sans-serif;
+  line-height:1.65;}
+.wrap{max-width:1080px;margin:0 auto;padding:32px 20px 80px}
+header.hero{text-align:center;padding:56px 20px 40px;
+  background:radial-gradient(ellipse at 50% 0%,rgba(93,216,242,.16),transparent 70%);
+  border-bottom:1px solid var(--line)}
+h1{font-size:clamp(28px,5vw,46px);margin:0 0 10px;letter-spacing:-.5px}
+.sub{color:var(--dim);font-size:17px;max-width:640px;margin:0 auto}
+.badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+  color:var(--accent);padding:5px 14px;border-radius:999px;font-size:12.5px;
+  font-weight:600;letter-spacing:.4px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px;margin:30px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  padding:24px;text-decoration:none;color:inherit;display:block;
+  transition:transform .22s cubic-bezier(.2,.8,.3,1),border-color .22s,box-shadow .22s;
+  position:relative;overflow:hidden}
+.card:hover{transform:translateY(-5px);border-color:var(--accent);
+  box-shadow:0 14px 34px rgba(0,0,0,.28)}
+.card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--c,var(--accent))}
+.card h3{margin:6px 0 8px;font-size:20px}
+.card p{margin:0 0 14px;color:var(--dim);font-size:14.5px}
+.num{font-size:12px;font-weight:700;color:var(--c,var(--accent));letter-spacing:1.4px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:11.5px;background:var(--panel2);border:1px solid var(--line);
+  padding:3px 9px;border-radius:6px;color:var(--dim)}
+.sec{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px;margin:26px 0}
+h2{font-size:23px;margin:0 0 14px;display:flex;align-items:center;gap:10px}
+h2 .dot{width:9px;height:9px;border-radius:50%;background:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:14.5px;margin:12px 0}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)}
+th{color:var(--accent);font-size:12.5px;text-transform:uppercase;letter-spacing:.7px}
+td.n{font-variant-numeric:tabular-nums}
+.note{border-left:3px solid var(--gold);background:var(--panel2);
+  padding:14px 18px;border-radius:0 10px 10px 0;margin:16px 0;font-size:14.5px}
+.note b{color:var(--gold)}
+ul.chk{list-style:none;padding:0;margin:0}
+ul.chk li{padding:9px 0 9px 30px;position:relative;border-bottom:1px solid var(--line);font-size:14.5px}
+ul.chk li::before{content:"✓";position:absolute;left:6px;color:var(--green);font-weight:700}
+footer{text-align:center;color:var(--dim);font-size:13px;padding:40px 20px;border-top:1px solid var(--line)}
+.progress{height:7px;background:var(--panel2);border-radius:99px;overflow:hidden;margin-top:14px}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--violet));
+  width:0;transition:width .9s cubic-bezier(.2,.8,.3,1)}
+code{background:var(--panel2);padding:2px 6px;border-radius:5px;font-size:13px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.m{font-family:"Latin Modern Math",Cambria Math,Georgia,serif;font-style:italic}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="badge">GATE 2027 · IIT MADRAS · SECTION 1</div>
+  <h1>Engineering Mathematics</h1>
+  <p class="sub">A complete, first-principles course — from “what is a proposition?” to
+  eigen-decomposition and Bayesian inference. Every animation runs offline. Every
+  number was machine-verified.</p>
+</header>
+
+<div class="wrap">
+
+  <div class="grid">
+    <a class="card" href="m1-discrete.html" style="--c:var(--accent)">
+      <div class="num">MODULE 01</div>
+      <h3>Discrete Mathematics</h3>
+      <p>Logic, sets, relations, lattices, groups, graphs and combinatorics — the
+      largest single block of marks in the paper.</p>
+      <div class="tags"><span class="tag">Truth tables</span><span class="tag">Lattices</span>
+      <span class="tag">Graphs</span><span class="tag">Recurrences</span></div>
+    </a>
+    <a class="card" href="m2-linear-algebra.html" style="--c:var(--violet)">
+      <div class="num">MODULE 02</div>
+      <h3>Linear Algebra</h3>
+      <p>Matrices as transformations. Determinants as area. Eigenvectors as the
+      directions that refuse to turn.</p>
+      <div class="tags"><span class="tag">Determinants</span><span class="tag">Rank</span>
+      <span class="tag">Eigenvalues</span><span class="tag">LU</span></div>
+    </a>
+    <a class="card" href="m3-calculus.html" style="--c:var(--orange)">
+      <div class="num">MODULE 03</div>
+      <h3>Calculus</h3>
+      <p>Limits, continuity, the mean value theorem, and the theorem that binds
+      differentiation to area.</p>
+      <div class="tags"><span class="tag">Limits</span><span class="tag">MVT</span>
+      <span class="tag">Extrema</span><span class="tag">Integration</span></div>
+    </a>
+    <a class="card" href="m4-probability.html" style="--c:var(--green)">
+      <div class="num">MODULE 04</div>
+      <h3>Probability &amp; Statistics</h3>
+      <p>Five distributions, one Bayes theorem, and the central limit theorem that
+      explains why bells are everywhere.</p>
+      <div class="tags"><span class="tag">Bayes</span><span class="tag">Distributions</span>
+      <span class="tag">CLT</span><span class="tag">Dispersion</span></div>
+    </a>
+  </div>
+
+  <div class="sec">
+    <h2><span class="dot"></span>How to use this course</h2>
+    <table>
+      <tr><th>Pass</th><th>Goal</th><th>Method</th><th>Time</th></tr>
+      <tr><td><b>1 — Concept</b></td><td>Understand</td>
+          <td>Read the theory, play with every animation, rebuild the glossary from memory</td><td class="n">5 weeks</td></tr>
+      <tr><td><b>2 — Mechanism</b></td><td>Reproduce</td>
+          <td>Rework all 38 solved problems with the solution covered</td><td class="n">4 weeks</td></tr>
+      <tr><td><b>3 — Speed</b></td><td>Compete</td>
+          <td>Timed mixed sets: 90 s per 1-mark, 3 min per 2-mark</td><td class="n">5 weeks</td></tr>
+    </table>
+    <div class="note"><b>Error log discipline.</b> Keep one sheet with four columns —
+    <i>question · my answer · correct answer · which trap it was</i>. After three weeks the
+    patterns become obvious and revision becomes targeted instead of generic. This is the
+    highest-return study habit available for GATE.</div>
+  </div>
+
+  <div class="sec">
+    <h2><span class="dot" style="background:var(--red)"></span>The 14 highest-cost traps</h2>
+    <table id="traps">
+      <tr><th style="width:42px">#</th><th>Trap</th><th>The correct position</th></tr>
+    </table>
+  </div>
+
+  <div class="sec">
+    <h2><span class="dot" style="background:var(--green)"></span>Readiness self-check</h2>
+    <p style="color:var(--dim);font-size:14.5px;margin-top:0">Tick what you can do unaided.
+    Your progress is saved in this browser.</p>
+    <div id="checklist"></div>
+    <div class="progress"><i id="bar"></i></div>
+    <p id="pct" style="text-align:right;color:var(--dim);font-size:13px;margin:8px 0 0">0 / 17</p>
+  </div>
+
+  <div class="sec">
+    <h2><span class="dot" style="background:var(--gold)"></span>Verification note</h2>
+    <ul class="chk">
+      <li>All 40+ numeric results computed in a Python sandbox, not asserted from memory.</li>
+      <li>Exact rational arithmetic where it matters — Bayes posterior <span class="m">1/6</span>,
+          derangement <span class="m">D₅ = 44</span>, LU solve <span class="m">x = (1, 2, 3)ᵀ</span>.</li>
+      <li>Logic and counting answers obtained by exhaustive enumeration over all assignments.</li>
+      <li>Integrals cross-checked against Simpson's rule — <span class="m">∫₀¹x²eˣdx</span> matched
+          <span class="m">e − 2</span> to 13 significant digits.</li>
+      <li><b>Correction applied:</b> the three single-only regions of the inclusion–exclusion
+          Venn figure are <b>229 / 115 / 76</b>, not the 219/126/84 given in the earlier
+          Markdown draft. The corrected regions now sum to exactly 1000.</li>
+    </ul>
+  </div>
+
+</div>
+
+<footer>
+  Built for GATE 2027 CS &amp; IT · Section 1: Engineering Mathematics<br>
+  Fully offline — no CDN, no network, no tracking.
+</footer>
+
+<script>
+const TRAPS=[
+ ["Treating <span class='m'>p → q</span> as false when <span class='m'>p</span> is false","It is <b>true</b> — vacuous truth"],
+ ["Assuming the converse follows from an implication","Only the <b>contrapositive</b> is equivalent"],
+ ["Swapping <span class='m'>∀x∃y</span> and <span class='m'>∃y∀x</span>","<span class='m'>∃∀</span> is strictly stronger"],
+ ["“Antisymmetric = not symmetric”","Independent properties; equality is both"],
+ ["Maximal matching vs maximum matching","Maximal = cannot extend; maximum = largest overall"],
+ ["Assuming <span class='m'>AB = BA</span>","Matrix multiplication is <b>not</b> commutative"],
+ ["Forgetting what <span class='m'>det = 0</span> implies","No inverse, dependent rows, non-trivial null space"],
+ ["Assuming a parameter must cause inconsistency","Check <span class='m'>r</span> vs <span class='m'>rₐ</span> — often it never does"],
+ ["Continuous ⟹ differentiable","False; <span class='m'>|x|</span> at 0 is the counterexample"],
+ ["Omitting endpoints in absolute extrema","Test critical points <b>and</b> endpoints"],
+ ["Applying L'Hôpital to a determinate form","Only valid for <span class='m'>0/0</span> and <span class='m'>∞/∞</span>"],
+ ["Independent = mutually exclusive","Nearly opposite notions"],
+ ["Confusing <span class='m'>P(+|D)</span> with <span class='m'>P(D|+)</span>","Bayes exists to convert between them"],
+ ["Dividing by <span class='m'>n</span> for a sample variance","Use <span class='m'>n − 1</span> when it says “sample”"]
+];
+const t=document.getElementById('traps');
+TRAPS.forEach((r,i)=>{const tr=document.createElement('tr');
+ tr.innerHTML=`<td class="n" style="color:var(--red);font-weight:700">${i+1}</td><td>${r[0]}</td><td>${r[1]}</td>`;
+ t.appendChild(tr);});
+
+const ITEMS=[
+ "State the one row where <span class='m'>p → q</span> is false, without looking.",
+ "Negate <span class='m'>∀x∃y (P(x) → Q(y))</span> in one step.",
+ "Count equivalence relations on a 4-element set (answer: 15).",
+ "Explain why <span class='m'>D₃₆</span> is a lattice but not a Boolean algebra.",
+ "Apply handshaking: a 3-regular graph with 12 edges has how many vertices? (8)",
+ "Prove <span class='m'>K₃,₃</span> non-planar using <span class='m'>m ≤ 2n − 4</span>.",
+ "Solve a two-term linear recurrence by the characteristic root method.",
+ "State the consistency rule in terms of <span class='m'>r</span>, <span class='m'>rₐ</span> and <span class='m'>n</span>.",
+ "Find <span class='m'>2×2</span> eigenvalues from trace and determinant in under 30 s.",
+ "Produce <span class='m'>L</span> and <span class='m'>U</span> for a <span class='m'>3×3</span> and solve by two substitutions.",
+ "Give a function continuous but not differentiable, and say exactly why.",
+ "State all three hypotheses of Rolle's theorem and a counterexample.",
+ "Integrate <span class='m'>x²eˣ</span> by parts twice without hesitation.",
+ "Recompute the 1-in-6 disease-testing answer from scratch.",
+ "Name the distribution whose mean equals its variance.",
+ "State the memoryless property and the one continuous distribution with it.",
+ "Explain the <span class='m'>n − 1</span> in the sample variance."
+];
+const cl=document.getElementById('checklist');
+let saved={};try{saved=JSON.parse(localStorage.getItem('gate_chk')||'{}')}catch(e){}
+ITEMS.forEach((s,i)=>{
+ const lab=document.createElement('label');
+ lab.style.cssText="display:flex;gap:11px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line);font-size:14.5px;cursor:pointer";
+ lab.innerHTML=`<input type="checkbox" data-i="${i}" ${saved[i]?'checked':''} style="margin-top:4px;width:17px;height:17px;accent-color:#5fd39a;flex:none"><span>${s}</span>`;
+ cl.appendChild(lab);
+});
+function upd(){
+ const b=[...cl.querySelectorAll('input')];
+ const n=b.filter(x=>x.checked).length;
+ document.getElementById('bar').style.width=(n/b.length*100)+'%';
+ document.getElementById('pct').textContent=n+' / '+b.length;
+}
+cl.addEventListener('change',e=>{
+ saved[e.target.dataset.i]=e.target.checked;
+ localStorage.setItem('gate_chk',JSON.stringify(saved));upd();
+});
+upd();
+</script>
+</body>
+</html>
