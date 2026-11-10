@@ -76,6 +76,19 @@ def build(d):
     page = ENGINE.replace('/*__TITLE__*/', html.escape(d['title'])).replace('/*__ACCENT__*/', d['accent']).replace('/*__DATA__*/', data)
     (ROOT / 'out' / f"{d['id']}.html").write_text(page)
 
+def nav_for(tid, syl):
+    """Previous/next built module (by syllabus order) so the player can offer 'Next module'."""
+    order = [(t[0], t[1]) for sec in syl for t in sec['topics']]
+    have = lambda x: (ROOT / 'content' / f'{x}.js').exists()
+    ids = [o[0] for o in order]
+    if tid not in ids: return {}
+    k = ids.index(tid); nav = {}
+    for j in range(k - 1, -1, -1):
+        if have(ids[j]): nav['prev'] = {'id': order[j][0], 'title': order[j][1]}; break
+    for j in range(k + 1, len(order)):
+        if have(order[j][0]): nav['next'] = {'id': order[j][0], 'title': order[j][1]}; break
+    return nav
+
 def gallery(syl, built):
     secs, n_done, total = [], 0, 0
     for i, sec in enumerate(syl, 1):
@@ -115,7 +128,7 @@ if __name__ == '__main__':
         d = norm(load(f))
         if only and d['id'] not in only: continue
         if d['id'] not in known: bad.append(f"{d['id']}: not in syllabus.js")
-        bad += check(d); build(d)
+        bad += check(d); d['nav'] = nav_for(d['id'], syl); build(d)
         ph = sum(1 for s in d['scenes'] if s['type'] in ('step', 'flow', 'compare', 'viz') and not s.get('x'))
         dur = duration(d); words = sum(len(str(s.get('n', '')).split()) for s in d['scenes'])
         built[d['id']] = dict(dur=dur, phases=ph, scenes=len(d['scenes']))

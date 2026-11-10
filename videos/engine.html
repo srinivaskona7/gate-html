@@ -71,6 +71,34 @@ body.clean .layout { padding: 0; }
 .recbar button { height: 30px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel2); color: var(--text); padding: 0 10px; cursor: pointer; }
 .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #111827; border: 1px solid var(--line); padding: 10px 14px; border-radius: 10px; opacity: 0; transition: .25s; pointer-events: none; z-index: 40; max-width: 90vw; }
 .toast.show { opacity: 1; }
+.cg { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ctrl { gap: 6px 14px; }
+.ctrl button, .ctrl select { white-space: nowrap; }
+.ctrl .vol { display: inline-flex; align-items: center; gap: 6px; } #vol { width: 84px; accent-color: var(--accent); }
+#sceneSel { max-width: 190px; }
+.menu .pop.wide { min-width: 310px; padding: 12px; gap: 10px; }
+.pop label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+.pop label select { width: 100%; } .pop input[type=range] { width: 100%; accent-color: var(--accent); }
+.pop .rv { display: flex; justify-content: space-between; } .pop output { font-family: "SF Mono", Menlo, monospace; color: var(--text); }
+.vcbar { width: min(100%, calc((100vh - 190px) * 16 / 9)); margin: 6px auto 0; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; padding: 6px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); font-size: 13px; }
+.vcbar .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--bad); animation: pl 1.2s ease-in-out infinite; } @keyframes pl { 50% { opacity: .25; } }
+.vcbar .hint { margin: 0; }
+#bVC.on { background: var(--bad); color: #fff; }
+.endcard { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 14px; background: rgba(5,8,14,.78); text-align: center; padding: 16px; }
+.endcard p { margin: 0; font-size: clamp(16px, 3vw, 28px); font-weight: 800; }
+.endcard .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.endcard button { height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel2); cursor: pointer; max-width: 80vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.endcard button.primary { background: var(--accent); color: var(--on); border-color: transparent; font-weight: 700; }
+.endcard .ck { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
+.hcols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; } .hcols h4 { margin: 4px 0 6px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; } .hcols p { margin: 4px 0; font-size: 13px; }
+kbd { background: var(--panel2); border: 1px solid var(--line); border-radius: 5px; padding: 0 5px; font: 12px "SF Mono", Menlo, monospace; }
+.modal .box { max-height: 92vh; overflow: auto; } .modal .box.wide { width: min(720px, 94vw); } #help .box { width: min(720px, 94vw); }
+body.clean .vcbar { display: none !important; }
+@media (max-width: 760px) {
+  .lbl { display: none; } .ctrl { gap: 6px 8px; } .ctrl button, .ctrl select { padding: 0 8px; } #vol { width: 64px; } #sceneSel { max-width: 150px; flex: 1; }
+  .menu .pop, .menu .pop.wide { position: fixed; left: 8px; right: 8px; bottom: 12px; top: auto; min-width: 0; max-height: 75vh; overflow: auto; }
+  .hcols { grid-template-columns: 1fr; } #time { margin-left: 0; }
+}
 @media (max-width: 1100px) { .layout { flex-direction: column; } .studio { width: 100%; max-height: none; } }
 </style>
 </head>
@@ -82,29 +110,56 @@ body.clean .layout { padding: 0; }
       <canvas id="cv" width="1920" height="1080" aria-label="Video"></canvas>
       <div class="tap" id="tap"><button aria-label="Play">▶</button><p>Tap to play · default voice on</p></div>
       <div class="count" id="count" hidden></div>
+      <div class="endcard" id="endcard" hidden><p id="endTxt">Video complete</p><div class="row"><button id="bReplay">⟲ Replay</button><button id="bNextMod" class="primary" hidden>Next module →</button></div><label class="ck" id="autoRow" hidden><input type="checkbox" id="cAuto"> Auto-play next module</label></div>
     </div>
     <div class="seekwrap"><div id="ticks"></div><input type="range" id="seek" min="0" max="10000" value="0" step="1" aria-label="Seek"></div>
-    <div class="ctrl">
-      <button id="bPlay" class="primary" title="Play/Pause (Space)">▶ Play</button>
-      <button id="bRestart" title="Restart (R)">⟲</button>
-      <span class="grp" id="speeds"><button data-s="1" class="on">1×</button><button data-s="2">2×</button><button data-s="3">3×</button><button data-s="4">4×</button></span>
-      <button id="bLoop" title="Loop (L)">🔁</button>
-      <button id="bMute" title="Mute (M)">🔊</button>
-      <button id="bCC" class="on" title="Captions (C)">CC</button>
-      <select id="voiceSel" title="Default voice"></select>
-      <button id="bStudio" title="Voice Studio">🎙 Voice Studio</button>
-      <button id="bDl" class="primary" title="Download video">⬇ Download video</button>
-      <span class="menu" id="more"><button id="bMore">⋯ More</button>
-        <span class="pop">
-          <button id="mScript">📝 Copy timed script</button>
-          <button id="mSrt">⬇ Subtitles .srt</button>
-          <button id="mCues">⬇ cues.json</button>
-          <button id="mFrame">📸 Save frame (PNG)</button>
-        </span></span>
-      <button id="bFs" title="Fullscreen (F)">⛶</button>
-      <button id="bClean" title="Clean mode (H)">Clean</button>
+    <div class="ctrl" id="ctrl">
+      <span class="cg">
+        <button id="bPlay" class="primary" title="Play/Pause (Space)">▶ Play</button>
+        <button id="bRestart" title="Restart (R)">⟲</button>
+        <button id="bPrev" title="Previous scene ([ or P)">⏮</button>
+        <button id="bBack" title="Back 5 s (←)">−5s</button>
+        <button id="bFwd" title="Forward 5 s (→)">+5s</button>
+        <button id="bNext" title="Next scene (] or N)">⏭</button>
+      </span>
+      <span class="cg">
+        <span class="grp" id="speeds"><button data-s="1" class="on">1×</button><button data-s="2">2×</button><button data-s="3">3×</button><button data-s="4">4×</button></span>
+        <button id="bLoop" title="Loop (L)">🔁</button>
+        <span class="vol"><button id="bMute" title="Mute (M)">🔊</button><input type="range" id="vol" min="0" max="100" step="1" value="100" aria-label="Volume (Up/Down keys)" title="Volume (↑/↓)"></span>
+        <button id="bCC" class="on" title="Captions (C)">CC</button>
+      </span>
+      <span class="cg">
+        <select id="sceneSel" title="Jump to scene" aria-label="Scene"></select>
+        <span class="menu" id="audioMenu"><button id="bAudio" title="Audio track, voices, rate, pitch">🔈<span class="lbl"> Audio: </span><span id="audLbl">Voice A</span></button>
+          <span class="pop wide">
+            <label>Audio track<select id="trackSel"><option value="A">Voice A (default browser voice)</option><option value="B">Voice B (second voice)</option><option value="mine">Your voice (Voice Studio recording)</option><option value="off">Off (captions only)</option></select></label>
+            <label>Voice A<select id="voiceSel" title="Voice A"></select></label>
+            <label>Voice B<select id="voiceSelB" title="Voice B"></select></label>
+            <label><span class="rv"><span>Speech rate fine-tune</span><output id="rateV"></output></span><input type="range" id="rate" min="0.7" max="1.3" step="0.05" value="1"></label>
+            <label><span class="rv"><span>Pitch</span><output id="pitchV"></output></span><input type="range" id="pitch" min="0.5" max="1.5" step="0.05" value="1"></label>
+            <label>Voice-control language<select id="vcLang"><option value="en-US">English (US)</option><option value="en-IN">English (India)</option></select></label>
+          </span></span>
+        <button id="bVC" title="Voice control (V)">🎤<span class="lbl"> Voice control</span></button>
+      </span>
+      <span class="cg">
+        <button id="bStudio" title="Voice Studio">🎙<span class="lbl"> Voice Studio</span></button>
+        <button id="bDl" class="primary" title="Download video">⬇<span class="lbl"> Download video</span></button>
+        <span class="menu" id="more"><button id="bMore" title="More">⋯<span class="lbl"> More</span></button>
+          <span class="pop">
+            <button id="mScript">📝 Copy timed script</button>
+            <button id="mSrt">⬇ Subtitles .srt</button>
+            <button id="mCues">⬇ cues.json</button>
+            <button id="mFrame">📸 Save frame (PNG)</button>
+            <button id="mPrevMod" hidden>← Previous module</button>
+            <button id="mNextMod" hidden>Next module →</button>
+          </span></span>
+        <button id="bHelp" title="Shortcuts and voice commands (?)">?</button>
+        <button id="bFs" title="Fullscreen (F)">⛶</button>
+        <button id="bClean" title="Clean mode (H)">Clean</button>
+      </span>
       <span id="time">0:00 / 0:00</span>
     </div>
+    <div class="vcbar" id="vcBar" hidden><i class="dot"></i><b>Listening</b><span id="vcLast">Waiting for a command…</span><span class="hint" id="vcHint"></span></div>
     <div id="sceneName"></div>
   </section>
 
@@ -152,6 +207,29 @@ body.clean .layout { padding: 0; }
   </div>
 </div>
 <div class="recbar" id="recbar" hidden><i></i><span id="recTxt">Recording…</span><button id="recCancel">Cancel</button></div>
+<div class="modal" id="help" hidden>
+  <div class="box">
+    <h3>Shortcuts and voice commands</h3>
+    <div class="hcols">
+      <div><h4>Keyboard</h4>
+        <p><kbd>Space</kbd> play/pause · <kbd>R</kbd> restart · <kbd>←</kbd> <kbd>→</kbd> −/+5 s</p>
+        <p><kbd>[</kbd> <kbd>]</kbd> or <kbd>P</kbd> <kbd>N</kbd> previous/next scene</p>
+        <p><kbd>1</kbd>–<kbd>4</kbd> speed · <kbd>↑</kbd> <kbd>↓</kbd> volume · <kbd>M</kbd> mute</p>
+        <p><kbd>C</kbd> captions · <kbd>L</kbd> loop · <kbd>F</kbd> fullscreen · <kbd>H</kbd> clean mode</p>
+        <p><kbd>V</kbd> voice control · <kbd>?</kbd> this help · <kbd>Esc</kbd> close</p></div>
+      <div><h4>Voice control</h4>
+        <p>play, start, resume · pause, stop</p>
+        <p>next, skip · previous, back · restart, start over · repeat</p>
+        <p>faster, slower · speed one/two/three/four</p>
+        <p>mute, unmute · volume up, volume down, volume max</p>
+        <p>captions on/off · fullscreen, exit fullscreen · loop on/off</p>
+        <p>go to scene 5 · next module</p>
+        <p class="hint">While narration plays, start with the wake word: "video pause", "video next". When paused, bare commands work.</p></div>
+    </div>
+    <p class="hint">Privacy: voice control uses your browser's own speech recognition (Chrome and Edge send the audio to their recognition service). This page never records, stores or sends audio anywhere else. Not available in Firefox.</p>
+    <div class="btns"><button id="helpClose" class="primary">Close</button></div>
+  </div>
+</div>
 <div class="toast" id="toast" role="status"></div>
 <audio id="mine" preload="auto"></audio>
 
@@ -762,79 +840,184 @@ function draw(t) {
 }
 
 /* =================== playback state =================== */
+const LS = { get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+const num = (v, d) => { v = parseFloat(v); return isNaN(v) ? d : v; };
 let t = 0, playing = false, speed = 1, loop = false, muted = false, cur = -1, last = performance.now();
-let audioMode = 'default';              // 'default' | 'mine'
+let track = ['A', 'B', 'off'].includes(LS.get('kd-track', 'A')) ? LS.get('kd-track', 'A') : 'A';   // 'A' | 'B' | 'mine' | 'off'
+let vol = clamp(num(LS.get('kd-vol', '1'), 1)), rateFine = clamp(num(LS.get('kd-rate', '1'), 1), 0.7, 1.3), pitch = clamp(num(LS.get('kd-pitch', '1'), 1), 0.5, 1.5);
 let REC = null, SREC = null;            // video export / studio recording
 const synth = window.speechSynthesis || null;
-let voices = [], voice = null, spk = { scene: -1, idx: -1, ts: 0 }, speakTimer = 0;
+const NAV = D.nav || {};
+let voices = [], voiceA = null, voiceB = null, spk = { scene: -1, idx: -1, ts: 0 };
+const HOLDMAX = 4;
+/* speech scheduler state. gen invalidates callbacks of cancelled utterances; list = chunks not yet handed to the
+   browser; active = utterances inside the browser queue (kept at <= 2 so volume/pitch edits apply within a chunk or two) */
+const SP = { gen: 0, list: [], active: 0, queued: -1, left: {}, paused: false, pausedAt: 0, hold: 0, timer: 0, timerOn: false, deb: 0, drift: 0, uStart: 0 };
+const effTrack = () => (track === 'mine' && !MINE.url ? 'A' : track);
+const curVoice = () => (effTrack() === 'B' ? voiceB : voiceA);
 
-function loadVoices() {
-  if (!synth) { $('voiceSel').innerHTML = '<option>No browser voice</option>'; return; }
-  voices = synth.getVoices().filter(v => /^en(-|_|$)/i.test(v.lang));
-  if (!voices.length) voices = synth.getVoices();
-  const score = v => (/natural|neural/i.test(v.name) ? 6 : 0) + (/google/i.test(v.name) ? 4 : 0) + (/daniel|alex|aaron|arthur|guy|ryan|male/i.test(v.name) ? 3 : 0) + (/en-(us|gb|in)/i.test(v.lang) ? 1 : 0);
-  voices.sort((a, b) => score(b) - score(a));
-  const saved = localStorage.getItem('kd-voice');
-  voice = voices.find(v => v.name === saved) || voices[0] || null;
-  $('voiceSel').innerHTML = voices.map(v => `<option${v === voice ? ' selected' : ''}>${v.name.replace(/</g, '')}</option>`).join('') || '<option>Default voice</option>';
+/* ---- voices ---- */
+const vScore = v => (/natural|neural|premium|enhanced/i.test(v.name) ? 6 : 0) + (/google/i.test(v.name) ? 4 : 0) + (/daniel|alex|aaron|arthur|guy|ryan|samantha|serena|karen|female|male/i.test(v.name) ? 3 : 0) + (/en-(us|gb|in)/i.test(v.lang) ? 1 : 0) + (v.localService ? 0 : 1);
+const isEn = v => /^en(-|_|$)/i.test(v.lang);
+const langKey = v => String(v.lang || '').replace('_', '-');
+const langRank = v => { const l = langKey(v).toLowerCase(); return l === 'en-us' ? 0 : l === 'en-gb' ? 1 : l === 'en-in' ? 2 : l.startsWith('en') ? 3 : 4; };
+function langName(l) { try { return new Intl.DisplayNames(['en'], { type: 'language' }).of(l) || l; } catch (e) { return l; } }
+function fillVoiceSel(sel, cur) {
+  const groups = new Map(); voices.forEach((v, k) => { const l = langKey(v) || '??'; if (!groups.has(l)) groups.set(l, []); groups.get(l).push([v, k]); });
+  sel.innerHTML = ''; if (!voices.length) { sel.innerHTML = '<option>Default voice</option>'; return; }
+  [...groups.entries()].forEach(([l, arr]) => {
+    const og = document.createElement('optgroup'); og.label = `${langName(l)} (${l})`;
+    arr.forEach(([v, k]) => { const o = document.createElement('option'); o.value = k; o.textContent = v.name; o.selected = v === cur; og.appendChild(o); }); sel.appendChild(og);
+  });
 }
-if (synth) { loadVoices(); synth.onvoiceschanged = loadVoices; }
-$('voiceSel').onchange = e => { voice = voices.find(v => v.name === e.target.value) || voice; localStorage.setItem('kd-voice', voice ? voice.name : ''); restartSpeech(); };
+function loadVoices() {
+  if (!synth) { $('voiceSel').innerHTML = '<option>No browser voice</option>'; $('voiceSelB').innerHTML = '<option>No browser voice</option>'; return; }
+  const all = (synth.getVoices() || []).slice();
+  voices = all.sort((a, b) => langRank(a) - langRank(b) || (langRank(a) === 4 ? langKey(a).localeCompare(langKey(b)) : 0) || vScore(b) - vScore(a) || a.name.localeCompare(b.name));
+  const eng = voices.filter(isEn).sort((a, b) => vScore(b) - vScore(a)); const pool = eng.length ? eng : voices;
+  voiceA = voices.find(v => v.name === LS.get('kd-voice', '')) || pool[0] || null;
+  voiceB = voices.find(v => v.name === LS.get('kd-voiceB', '') && v !== voiceA) || pool.find(v => v !== voiceA && langKey(v) !== langKey(voiceA || {})) || pool.find(v => v !== voiceA) || voiceA;
+  fillVoiceSel($('voiceSel'), voiceA); fillVoiceSel($('voiceSelB'), voiceB);
+}
+if (synth) { loadVoices(); synth.onvoiceschanged = loadVoices; } else loadVoices();
+$('voiceSel').onchange = e => { voiceA = voices[+e.target.value] || voiceA; LS.set('kd-voice', voiceA ? voiceA.name : ''); if (effTrack() === 'A') restartSpeechSoon(); };
+$('voiceSelB').onchange = e => { voiceB = voices[+e.target.value] || voiceB; LS.set('kd-voiceB', voiceB ? voiceB.name : ''); if (effTrack() === 'B') restartSpeechSoon(); };
 
+/* ---- speech scheduler ---- */
 function speechWanted() {
   if (!synth || muted) return false;
   if (REC) return REC.opt.audio === 'default';
   if (SREC) return false;
-  return playing && !(audioMode === 'mine' && MINE.url);
+  const tr = effTrack(); return playing && (tr === 'A' || tr === 'B');
 }
-function stopSpeech() { clearTimeout(speakTimer); if (synth) synth.cancel(); }
-function speakFrom(i, local) {
-  stopSpeech(); if (!speechWanted()) return;
-  const s = SC[i], ws = s.words; if (!ws.length) return;
-  let k = local < LEAD ? 0 : ws.findIndex(w => w.t1 > local); if (k < 0) return;
-  const sents = []; let cur = [];
-  for (let j = k; j < ws.length; j++) { cur.push(j); if (/[.!?]$/.test(ws[j].w) || cur.length >= 28) { sents.push(cur); cur = []; } }
-  if (cur.length) sents.push(cur);
-  const sp = REC ? 1 : speed;
-  const go = () => {
-    if (!speechWanted() || sceneAt(t) !== i) return;
-    sents.forEach(idx => {
-      const u = new SpeechSynthesisUtterance(idx.map(j => ws[j].w).join(' '));
-      if (voice) { u.voice = voice; u.lang = voice.lang; } u.rate = Math.min(2, 0.95 * sp);
-      const offs = []; let c = 0; idx.forEach(j => { offs.push(c); c += ws[j].w.length + 1; });
-      u.onstart = () => { spk = { scene: i, idx: idx[0], ts: performance.now() }; };
-      u.onboundary = e => { if (e.name && e.name !== 'word') return; let m = 0; while (m + 1 < offs.length && offs[m + 1] <= e.charIndex) m++; spk = { scene: i, idx: idx[m], ts: performance.now() }; };
-      synth.speak(u);
-    });
-  };
+function stopSpeech() {
+  clearTimeout(SP.timer); clearTimeout(SP.deb); SP.timerOn = false;
+  SP.gen++; SP.list = []; SP.active = 0; SP.left = {}; SP.queued = -1; SP.paused = false; SP.drift = 0; SP.hold = 0;
+  if (synth) synth.cancel();
+}
+function chunksOf(i, k0) {                    // sentence-sized chunks (<= 14 words) so Chrome's ~15 s cutoff never bites
+  const ws = SC[i].words, out = []; let c = [];
+  for (let j = k0; j < ws.length; j++) {
+    c.push(j); const w = ws[j].w;
+    if (/[.!?]["')\]]*$/.test(w) || c.length >= 14 || (c.length >= 8 && /[,;:]$/.test(w))) { out.push({ i, idx: c }); c = []; }
+  }
+  if (c.length) out.push({ i, idx: c }); return out;
+}
+function enqueue(i, k) { const cs = chunksOf(i, k); if (!cs.length) return; SP.left[i] = (SP.left[i] || 0) + cs.length; SP.list.push(...cs); feed(); }
+function feed() { while (SP.list.length && SP.active < 2) say(SP.list.shift()); }
+function say(c) {
+  const g = SP.gen, ws = SC[c.i].words, idx = c.idx;
+  const u = new SpeechSynthesisUtterance(idx.map(j => ws[j].w).join(' '));
+  const v = curVoice(); if (v) { u.voice = v; u.lang = v.lang; }
+  u.rate = clamp(0.95 * (REC ? 1 : speed * rateFine), 0.1, 2);
+  u.pitch = clamp(pitch + (effTrack() === 'B' && voiceB === voiceA ? 0.25 : 0), 0, 2);
+  u.volume = REC ? 1 : vol;
+  const offs = []; let o = 0; idx.forEach(j => { offs.push(o); o += ws[j].w.length + 1; });
+  const note = j => { spk = { scene: c.i, idx: j, ts: performance.now() }; if (c.i === cur && !REC && !SREC) { const d = starts[c.i] + ws[j].t0 - t; SP.drift = Math.abs(d) < 5 ? d : 0; } };
+  u.onstart = () => { if (g !== SP.gen) return; SP.uStart = performance.now(); note(idx[0]); };
+  u.onboundary = e => { if (g !== SP.gen || (e.name && e.name !== 'word')) return; let m = 0; while (m + 1 < offs.length && offs[m + 1] <= e.charIndex) m++; note(idx[m]); };
+  const done = () => { if (g !== SP.gen || u.__d) return; u.__d = 1; SP.active = Math.max(0, SP.active - 1); SP.left[c.i] = Math.max(0, (SP.left[c.i] || 0) - 1); feed(); };
+  u.onend = done; u.onerror = done;
+  SP.active++; SP.uStart = SP.uStart || performance.now(); synth.speak(u);
+}
+function speakFrom(i, local, keep) {          // interrupt: cancel + start scene i at local seconds (keep: chain after the finished scene, no cancel)
+  if (keep && speechWanted()) { clearTimeout(SP.timer); SP.timerOn = false; } else { stopSpeech(); if (!speechWanted()) return; }
+  const ws = SC[i].words; SP.queued = i; if (!ws.length) return;
+  const k = local < LEAD ? 0 : ws.findIndex(w => w.t1 > local); if (k < 0) return;
+  const sp = REC ? 1 : speed, g = SP.gen;
+  const go = () => { SP.timerOn = false; if (g !== SP.gen || !speechWanted() || sceneAt(t) !== i) return; enqueue(i, k); };
   const delay = local < LEAD ? (LEAD - local) / sp * 1000 : 0;
-  if (delay > 0) speakTimer = setTimeout(go, delay); else go();
+  if (delay > 0) { SP.timerOn = true; SP.timer = setTimeout(go, delay); } else go();
 }
-function restartSpeech() { const i = sceneAt(t); speakFrom(i, t - starts[i]); }
+function restartSpeech() { clearTimeout(SP.deb); const i = sceneAt(t); speakFrom(i, t - starts[i]); }
+function restartSpeechSoon(ms = 250) { clearTimeout(SP.deb); SP.deb = setTimeout(() => { if (playing || REC) restartSpeech(); else stopSpeech(); }, ms); }
+function aheadTick() {                        // chain the next scene's speech without cancelling the current one
+  const n = cur + 1; if (n >= SC.length || SP.queued !== cur || !speechWanted()) return;
+  const sp = REC ? 1 : speed;
+  if (t >= starts[n] + LEAD - 0.15 * sp) { SP.queued = n; enqueue(n, 0); }
+}
+function pauseSpeech() {
+  if (REC || !synth) return stopSpeech();
+  if (SP.active > 0 && !SP.timerOn && SP.queued >= 0) {
+    synth.pause(); SP.paused = true; SP.pausedAt = performance.now(); const g = SP.gen;
+    setTimeout(() => { if (g === SP.gen && SP.paused && !playing && !synth.paused) stopSpeech(); }, 150);   // pause() unsupported -> fall back to cancel
+  } else stopSpeech();
+}
+function resumeSpeech() {
+  if (SP.paused && synth && performance.now() - SP.pausedAt < 30000 && speechWanted()) {
+    SP.paused = false; synth.resume(); const g = SP.gen;
+    setTimeout(() => { if (g === SP.gen && playing && SP.active > 0 && synth.speaking === false) restartSpeech(); }, 600);
+  } else restartSpeech();
+}
+setInterval(() => {                           // keep-alive: a single utterance running > 11 s gets a pause/resume nudge (Chrome cutoff)
+  if (synth && playing && !SP.paused && SP.active > 0 && synth.speaking && performance.now() - SP.uStart > 11000) { synth.pause(); synth.resume(); SP.uStart = performance.now(); }
+}, 2000);
 
+/* ---- recorded voice ---- */
 const mineEl = $('mine');
 function syncMine() {
-  const want = !REC && !SREC && playing && !muted && audioMode === 'mine' && MINE.url;
+  mineEl.volume = vol;
+  const want = !REC && !SREC && playing && !muted && effTrack() === 'mine' && MINE.url;
   if (!want) { if (!mineEl.paused) mineEl.pause(); return; }
   mineEl.playbackRate = speed; mineEl.preservesPitch = true;
   if (Math.abs(mineEl.currentTime - t) > 0.3) mineEl.currentTime = Math.min(t, mineEl.duration || t);
   if (mineEl.paused) mineEl.play().catch(() => {});
 }
 
+/* ---- transport ---- */
+let endTimer = 0;
+function hideEnd() { clearInterval(endTimer); $('endcard').hidden = true; }
+function showEnd() {
+  const nx = NAV.next; $('endcard').hidden = false; $('bNextMod').hidden = !nx; $('autoRow').hidden = !nx;
+  if (nx) { $('bNextMod').textContent = `Next module → ${nx.title}`; }
+  $('endTxt').textContent = nx ? 'Module complete' : 'Video complete';
+  clearInterval(endTimer);
+  if (nx && $('cAuto').checked) { let n = 6; $('endTxt').textContent = `Next module in ${n}s…`; endTimer = setInterval(() => { n--; if (n <= 0) { clearInterval(endTimer); goModule(nx); } else $('endTxt').textContent = `Next module in ${n}s…`; }, 1000); }
+}
+function goModule(m) { if (m) location.href = m.id + '.html' + ($('cAuto').checked ? '#autoplay' : ''); else toast('No module in that direction'); }
 function setPlaying(p) {
   if (p && t >= TOTAL - 0.05) seekTo(0);
-  playing = p; last = performance.now(); $('tap').hidden = true;
+  if (p) hideEnd();
+  const was = playing; playing = p; last = performance.now(); $('tap').hidden = true;
   $('bPlay').textContent = p ? '❚❚ Pause' : '▶ Play';
-  if (p) restartSpeech(); else stopSpeech();
+  if (p) { if (!was) resumeSpeech(); } else if (was || SP.active) { clearTimeout(SP.deb); if (t >= TOTAL - 0.01) stopSpeech(); else pauseSpeech(); }
 }
-function seekTo(v) { t = clamp(v, 0, TOTAL - 0.001); cur = sceneAt(t); if (playing) restartSpeech(); }
-function setSpeed(n) { speed = n; document.querySelectorAll('#speeds button').forEach(b => b.classList.toggle('on', +b.dataset.s === n)); if (playing) restartSpeech(); }
+function seekTo(v) { t = clamp(v, 0, TOTAL - 0.001); cur = sceneAt(t); hideEnd(); SP.drift = 0; stopSpeech(); if (playing) restartSpeechSoon(120); }
+function gotoScene(k) { seekTo(starts[clamp(k, 0, SC.length - 1)] + 0.001); }
+function prevScene() { const c = sceneAt(t); gotoScene(t - starts[c] > 2 ? c : c - 1); }
+function nextScene() { const c = sceneAt(t); if (c + 1 < SC.length) gotoScene(c + 1); else toast('Last scene'); }
+function setSpeed(n) { speed = n; document.querySelectorAll('#speeds button').forEach(b => b.classList.toggle('on', +b.dataset.s === n)); if (playing) restartSpeechSoon(250); else stopSpeech(); }
+function setVol(v, say) {
+  vol = clamp(Math.round(v * 100) / 100); $('vol').value = Math.round(vol * 100); LS.set('kd-vol', vol);
+  if (muted && vol > 0) setMuted(false); if (say) toast(`Volume ${Math.round(vol * 100)}%`, 900);
+}
+function setMuted(m) { muted = m; $('bMute').textContent = m ? '🔇' : '🔊'; $('bMute').classList.toggle('on', m); if (m) stopSpeech(); else if (playing) restartSpeech(); }
+function setCC(on) { ccOn = on; $('bCC').classList.toggle('on', ccOn); }
+function setLoop(on) { loop = on; $('bLoop').classList.toggle('on', loop); }
+function setTrack(tr) {
+  track = tr; if (tr !== 'mine') LS.set('kd-track', tr);
+  $('trackSel').value = tr; $('audLbl').textContent = { A: 'Voice A', B: 'Voice B', mine: 'Your voice', off: 'Off' }[tr];
+  stopSpeech(); if (playing) restartSpeechSoon(60);
+}
 
 function frame(now) {
   const dt = Math.min(0.25, (now - last) / 1000); last = now;
   if (REC) t = REC.clock();
-  else if (playing) { t += dt * (SREC ? 1 : speed); if (t >= TOTAL) { if (loop && !SREC) { t = 0; cur = -1; } else { t = TOTAL - 0.001; setPlaying(false); } } }
-  const i = sceneAt(t); if (i !== cur) { cur = i; if (playing || REC) speakFrom(i, t - starts[i]); }
+  else if (playing) {
+    t += dt * (SREC ? 1 : speed);
+    if (!SREC) {
+      if (SP.drift) { const mx = 0.25 * dt * speed, st = clamp(SP.drift, -mx, mx), c0 = sceneAt(t); t = st < 0 ? Math.max(t + st, starts[c0]) : t + st; SP.drift -= st; }
+      const c = sceneAt(t), end = starts[c] + SC[c].dur;
+      if (t > end - 0.01 && SP.left[c] > 0 && speechWanted() && SP.hold < HOLDMAX) { t = end - 0.01; SP.hold += dt; }   // let the narrator finish the scene
+    }
+    if (t >= TOTAL) { if (loop && !SREC) { t = 0; cur = -1; } else { t = TOTAL - 0.001; setPlaying(false); if (!SREC) showEnd(); } }
+  }
+  const i = sceneAt(t);
+  if (i !== cur) {
+    const prev = cur; cur = i; const over = prev >= 0 && SP.hold >= HOLDMAX && SP.left[prev] > 0; SP.hold = 0;
+    if ((playing || REC) && (over || SP.queued !== i)) speakFrom(i, t - starts[i], !over && i === prev + 1 && SP.queued === prev && !SP.paused);
+  }
+  if (playing || REC) aheadTick();
   draw(t); syncMine(); if (REC) recTick(); if (SREC) studioTick(); if (!$('studio').hidden) { meterTick(); prompterTick(); }
   ui(); requestAnimationFrame(frame);
 }
@@ -843,36 +1026,167 @@ function ui() {
   const now = performance.now(); if (now - uiLast < 120) return; uiLast = now;
   if (document.activeElement !== $('seek')) $('seek').value = Math.round(t / TOTAL * 10000);
   $('time').textContent = `${fmt(t)} / ${fmt(TOTAL)} @${speed}×`;
-  const s = SC[sceneAt(t)]; $('sceneName').textContent = `Scene ${s.i + 1}/${SC.length} · ${s.name}${s.phase ? ` · Step ${s.pn}/${PHASES.length}` : ''}${audioMode === 'mine' && MINE.url ? ' · 🎙 your voice' : ''}`;
+  const si = sceneAt(t), s = SC[si]; $('sceneName').textContent = `Scene ${s.i + 1}/${SC.length} · ${s.name}${s.phase ? ` · Step ${s.pn}/${PHASES.length}` : ''}${effTrack() === 'mine' ? ' · 🎙 your voice' : ''}`;
+  if (document.activeElement !== $('sceneSel')) $('sceneSel').value = si;
+  $('trackSel').options[2].disabled = !MINE.url; if (track === 'mine' && !MINE.url) setTrack('A');
+  if (VCX.on) $('vcHint').textContent = playing ? 'Narration is playing: start commands with "video", e.g. "video pause".' : 'Paused: say a command, e.g. "play", "next", "faster".';
 }
 function drawTicks() { const tk = $('ticks'); if (!tk) return; tk.innerHTML = starts.map(st => `<i style="left:${st / TOTAL * 100}%"></i>`).join(''); }
+
+/* =================== voice control =================== */
+const NUMW = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20, won: 1, to: 2, too: 2, tree: 3, for: 4, fore: 4 };
+const numOf = w => (/^\d+$/.test(w || '') ? +w : NUMW[w] || null);
+/* parse(raw, isPlaying) -> {act, arg} | {ignored:true} | null. While narration plays the wake word "video" is required. */
+function vcParse(raw, isPlaying) {
+  let s = ' ' + String(raw).toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim() + ' ';
+  const wake = /^ (?:hey |ok |okay )?video /;
+  let tw;
+  if (wake.test(s)) s = s.replace(wake, ' ');
+  else if (isPlaying && (tw = s.match(/^ ((?:\w+ ){1,3})(?:the |this )video $/))) s = ' ' + tw[1];   // "pause the video"
+  else if (isPlaying) return { ignored: true };
+  for (let k = 0; k < 2; k++) s = s.replace(/ (?:please|um|uh|okay|ok|now|just|the|can you|could you|would you|will you|hey|and|then|let's|lets) /g, ' ');
+  s = s.replace(/full screen/g, 'fullscreen').replace(/\s+/g, ' ');
+  let m;
+  if (/\bnext (module|topic|lesson|video)\b/.test(s)) return { act: 'nextMod' };
+  if (/\b(previous|prev|last) (module|topic|lesson|video)\b/.test(s)) return { act: 'prevMod' };
+  if ((m = s.match(/\b(?:go to|jump to|goto)\s+(?:scene\s+)?(\w+)/) || s.match(/\bscene\s+(\w+)/))) { const n = numOf(m[1]); if (n) return { act: 'goto', arg: n }; }
+  if ((m = s.match(/\bspeed\s+(\w+)/)) && m[1] !== 'up') { const n = numOf(m[1]); return n >= 1 && n <= 4 ? { act: 'speed', arg: n } : null; }
+  if (/\b(normal|regular) speed\b/.test(s)) return { act: 'speed', arg: 1 };
+  if (/\b(restart|start over|begin again|beginning|from (the )?start|to (the )?start)\b/.test(s)) return { act: 'restart' };
+  if (/\b(repeat|replay|again)\b/.test(s)) return { act: 'repeat' };
+  if (/\bunmute\b/.test(s)) return { act: 'unmute' };
+  if (/\bmute\b/.test(s)) return { act: 'mute' };
+  if ((m = s.match(/\bvolume (?:to |at )?(\d{1,3})\b/))) return { act: 'volSet', arg: Math.min(100, +m[1]) / 100 };
+  if (/\b(max|maximum|full) volume\b|\bvolume (max|maximum|full)\b|\bvolume to (max|full)\b/.test(s)) return { act: 'volMax' };
+  if (/\bvolume (up|higher)\b|\blouder\b|\bturn (it )?up\b/.test(s)) return { act: 'volUp' };
+  if (/\bvolume (down|lower)\b|\b(quieter|softer)\b|\bturn (it )?down\b|\blower volume\b/.test(s)) return { act: 'volDown' };
+  if (/\b(captions?|subtitles?|cc)\b/.test(s)) return { act: 'cc', arg: /\b(off|hide|disable|remove)\b/.test(s) ? false : /\b(on|show|enable)\b/.test(s) ? true : null };
+  if (/\bfullscreen\b/.test(s)) return { act: 'fs', arg: !/\b(exit|leave|stop|close|quit|windowed)\b/.test(s) };
+  if (/\bloop\w*\b/.test(s)) return { act: 'loop', arg: !/\b(off|stop|disable|cancel|no)\b/.test(s) };
+  if (/\b(faster|speed up)\b/.test(s)) return { act: 'faster' };
+  if (/\b(slower|slow down)\b/.test(s)) return { act: 'slower' };
+  if (/\b(next|skip|forward)\b/.test(s)) return { act: 'next' };
+  if (/\b(previous|prev|back|backward)\b/.test(s)) return { act: 'prev' };
+  if (/\b(pause|stop|halt|wait|hold)\b/.test(s)) return { act: 'pause' };
+  if (/\b(play|start|resume|continue|begin)\b|^ go $/.test(s)) return { act: 'play' };
+  return null;
+}
+function vcRun(c) {
+  switch (c.act) {
+    case 'play': setPlaying(true); return 'Play';
+    case 'pause': setPlaying(false); return 'Pause';
+    case 'next': nextScene(); return 'Next scene';
+    case 'prev': gotoScene(sceneAt(t) - 1); return 'Previous scene';
+    case 'restart': seekTo(0); setPlaying(true); return 'Restart';
+    case 'repeat': gotoScene(sceneAt(t)); setPlaying(true); return 'Repeat scene';
+    case 'faster': setSpeed(Math.min(4, speed + 1)); return `Speed ${speed}×`;
+    case 'slower': setSpeed(Math.max(1, speed - 1)); return `Speed ${speed}×`;
+    case 'speed': setSpeed(c.arg); return `Speed ${c.arg}×`;
+    case 'mute': setMuted(true); return 'Mute';
+    case 'unmute': setMuted(false); return 'Unmute';
+    case 'volUp': setVol(vol + 0.15); return `Volume ${Math.round(vol * 100)}%`;
+    case 'volDown': setVol(vol - 0.15); return `Volume ${Math.round(vol * 100)}%`;
+    case 'volSet': setVol(c.arg); return `Volume ${Math.round(vol * 100)}%`;
+    case 'volMax': setVol(1); return 'Volume 100%';
+    case 'cc': setCC(c.arg === null ? !ccOn : c.arg); return `Captions ${ccOn ? 'on' : 'off'}`;
+    case 'fs': { const el = $('stagewrap'); try { const p = c.arg ? (!document.fullscreenElement && el.requestFullscreen && el.requestFullscreen()) : (document.fullscreenElement && document.exitFullscreen()); if (p && p.catch) p.catch(() => toast('The browser needs a click before it allows fullscreen')); } catch (e) {} return c.arg ? 'Fullscreen' : 'Exit fullscreen'; }
+    case 'loop': setLoop(c.arg); return `Loop ${loop ? 'on' : 'off'}`;
+    case 'goto': if (c.arg > SC.length) { toast(`There are only ${SC.length} scenes`); return `Scene ${c.arg}: not found`; } gotoScene(c.arg - 1); return `Scene ${c.arg}`;
+    case 'nextMod': if (NAV.next) { goModule(NAV.next); return 'Next module'; } return 'No next module';
+    case 'prevMod': if (NAV.prev) { goModule(NAV.prev); return 'Previous module'; } return 'No previous module';
+  }
+  return '';
+}
+const VCX = { on: false, rec: null, starts: [], lang: LS.get('kd-vclang', 'en-US'), last: '' };
+function heard(raw) {
+  if (REC || SREC) return null;
+  const c = vcParse(raw, playing);
+  if (!c) VCX.last = `“${raw.trim()}” → not a command`;
+  else if (c.ignored) VCX.last = `“${raw.trim()}” → ignored (say "video …" while narration plays)`;
+  else VCX.last = `“${raw.trim()}” → ${vcRun(c)}`;
+  $('vcLast').textContent = VCX.last; return c;
+}
+const SRC = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+function vcStop(msg) {
+  VCX.on = false; $('bVC').classList.remove('on'); $('vcBar').hidden = true;
+  if (VCX.rec) { const r = VCX.rec; VCX.rec = null; r.onend = null; r.onerror = null; try { r.stop(); } catch (e) {} }
+  if (msg) toast(msg, 5000);
+}
+function vcBegin() {
+  const r = new SRC(); VCX.rec = r; r.continuous = true; r.interimResults = false; r.lang = VCX.lang; r.maxAlternatives = 1;
+  r.onresult = e => { for (let k = e.resultIndex; k < e.results.length; k++) if (e.results[k].isFinal) heard(e.results[k][0].transcript); };
+  r.onerror = e => {
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') vcStop('Microphone access was denied, so voice control is off. Allow the microphone in the browser address bar and try again.');
+    else if (e.error === 'audio-capture') vcStop('No microphone was found, so voice control is off.');
+    else if (e.error === 'network') vcStop('Speech recognition needs the browser’s online recognition service, which is unreachable. Voice control is off.');
+  };
+  r.onend = () => {                          // continuous mode ends on silence/timeouts: restart, but back off if it loops
+    if (!VCX.on || VCX.rec !== r) return;
+    const n = performance.now(); VCX.starts = VCX.starts.filter(x => n - x < 6000); VCX.starts.push(n);
+    if (VCX.starts.length > 8) return vcStop('Voice control stopped: the recognizer keeps ending. Toggle it to retry.');
+    setTimeout(() => { if (VCX.on && VCX.rec === r) { try { r.start(); } catch (e) {} } }, 250);
+  };
+  try { r.start(); } catch (e) { vcStop('Could not start voice control: ' + e.message); }
+}
+function vcToggle() {
+  if (VCX.on) return vcStop('Voice control off');
+  if (!SRC) return toast('Voice control is not supported in this browser (Firefox has no speech recognition). Use Chrome or Edge, or the keyboard shortcuts.', 5500);
+  VCX.on = true; VCX.starts = []; $('bVC').classList.add('on'); $('vcBar').hidden = false; $('vcLast').textContent = 'Waiting for a command…'; vcBegin();
+}
+$('bVC').onclick = vcToggle;
+$('vcLang').value = VCX.lang;
+$('vcLang').onchange = e => { VCX.lang = e.target.value; LS.set('kd-vclang', VCX.lang); if (VCX.on) { vcStop(); vcToggle(); } };
 
 /* =================== controls =================== */
 function toast(m, ms = 2600) { const e = $('toast'); e.textContent = m; e.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove('show'), ms); }
 $('tap').onclick = () => setPlaying(true);
 $('bPlay').onclick = () => setPlaying(!playing);
 $('bRestart').onclick = () => { seekTo(0); setPlaying(true); };
+$('bPrev').onclick = prevScene; $('bNext').onclick = nextScene;
+$('bBack').onclick = () => seekTo(t - 5); $('bFwd').onclick = () => seekTo(t + 5);
 $('speeds').onclick = e => { const b = e.target.closest('button'); if (b) setSpeed(+b.dataset.s); };
-$('bLoop').onclick = () => { loop = !loop; $('bLoop').classList.toggle('on', loop); };
-function setMuted(m) { muted = m; $('bMute').textContent = m ? '🔇' : '🔊'; $('bMute').classList.toggle('on', m); if (m) stopSpeech(); else if (playing) restartSpeech(); }
+$('bLoop').onclick = () => setLoop(!loop);
 $('bMute').onclick = () => setMuted(!muted);
-$('bCC').onclick = () => { ccOn = !ccOn; $('bCC').classList.toggle('on', ccOn); };
+$('vol').value = Math.round(vol * 100); $('vol').oninput = e => setVol(e.target.value / 100);
+$('rate').value = rateFine; $('pitch').value = pitch;
+const rpLabel = () => { $('rateV').textContent = rateFine.toFixed(2) + '×'; $('pitchV').textContent = pitch.toFixed(2); }; rpLabel();
+$('rate').oninput = e => { rateFine = clamp(num(e.target.value, 1), 0.7, 1.3); LS.set('kd-rate', rateFine); rpLabel(); };
+$('pitch').oninput = e => { pitch = clamp(num(e.target.value, 1), 0.5, 1.5); LS.set('kd-pitch', pitch); rpLabel(); };
+$('trackSel').onchange = e => setTrack(e.target.value);
+$('sceneSel').innerHTML = SC.map((s, k) => `<option value="${k}">${k + 1}. ${String(s.name).replace(/</g, '&lt;')}</option>`).join('');
+$('sceneSel').onchange = e => { gotoScene(+e.target.value); e.target.blur(); };
+$('bCC').onclick = () => setCC(!ccOn);
 $('seek').oninput = e => { $('tap').hidden = true; seekTo(e.target.value / 10000 * TOTAL); };
 $('bFs').onclick = () => document.fullscreenElement ? document.exitFullscreen() : $('stagewrap').requestFullscreen && $('stagewrap').requestFullscreen();
 $('bClean').onclick = () => document.body.classList.toggle('clean');
 $('bStudio').onclick = () => { $('studio').hidden = !$('studio').hidden; renderTakes(); };
-$('bMore').onclick = () => $('more').classList.toggle('open');
-document.addEventListener('click', e => { if (!e.target.closest('#more')) $('more').classList.remove('open'); });
+document.querySelectorAll('.menu > button').forEach(b => b.onclick = () => { const m = b.parentElement, o = m.classList.contains('open'); document.querySelectorAll('.menu.open').forEach(x => x.classList.remove('open')); if (!o) m.classList.add('open'); });
+document.addEventListener('click', e => { document.querySelectorAll('.menu.open').forEach(m => { if (!m.contains(e.target)) m.classList.remove('open'); }); if (e.detail > 0) { const b = e.target.closest('.ctrl button'); if (b) b.blur(); } });
+$('mPrevMod').hidden = !NAV.prev; $('mNextMod').hidden = !NAV.next;
+if (NAV.prev) $('mPrevMod').textContent = '← Previous module: ' + NAV.prev.title; if (NAV.next) $('mNextMod').textContent = 'Next module → ' + NAV.next.title;
+$('mPrevMod').onclick = () => goModule(NAV.prev); $('mNextMod').onclick = () => goModule(NAV.next); $('bNextMod').onclick = () => goModule(NAV.next);
+$('bReplay').onclick = () => { seekTo(0); setPlaying(true); };
+$('cAuto').checked = LS.get('kd-auto', '0') === '1'; $('cAuto').onchange = e => { LS.set('kd-auto', e.target.checked ? '1' : '0'); if (!e.target.checked) { clearInterval(endTimer); if (!$('endcard').hidden) $('endTxt').textContent = 'Module complete'; } else if (!$('endcard').hidden) showEnd(); };
+$('bHelp').onclick = () => { $('help').hidden = !$('help').hidden; };
+$('helpClose').onclick = () => { $('help').hidden = true; };
+$('help').onclick = e => { if (e.target === $('help')) $('help').hidden = true; };
 cv.onclick = () => { if (!REC && !SREC) setPlaying(!playing); };
 document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('help').hidden) { $('help').hidden = true; return; }
   if (e.target.closest('input, select, textarea') || REC) { if (REC && e.key === 'Escape') cancelRec(); return; }
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
   const k = e.key.toLowerCase();
+  if (k === ' ' && e.target.closest && e.target.closest('button, a, summary')) return;   // Space activates the focused control
   if (k === ' ') { e.preventDefault(); setPlaying(!playing); }
-  else if ('1234'.includes(k) && k.length === 1) setSpeed(+k);
+  else if (k.length === 1 && '1234'.includes(k)) setSpeed(+k);
   else if (k === 'arrowright') seekTo(t + 5); else if (k === 'arrowleft') seekTo(t - 5);
+  else if (k === 'arrowup') { e.preventDefault(); setVol(vol + 0.05, true); } else if (k === 'arrowdown') { e.preventDefault(); setVol(vol - 0.05, true); }
+  else if (k === ']' || k === 'n') nextScene(); else if (k === '[' || k === 'p') prevScene();
   else if (k === 'r') { seekTo(0); setPlaying(true); } else if (k === 'l') $('bLoop').click(); else if (k === 'm') $('bMute').click();
   else if (k === 'c') $('bCC').click(); else if (k === 'f') $('bFs').click(); else if (k === 'h') $('bClean').click();
+  else if (k === 'v') vcToggle(); else if (k === '?' || k === '/') $('bHelp').click();
 });
+setTrack(track);
 function saveBlob(blob, name) { const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); }
 const FILE = `kona-srinivas-gate-${D.id}-1920x1080`;
 function timedScript() { return SC.map(s => `${fmtTC(starts[s.i])}-${fmtTC(starts[s.i] + s.dur)} | ${s.name} | ${s.n}`).join('\n'); }
@@ -1021,7 +1335,7 @@ $('merge').onclick = async () => {
     `<p class="hint">${MINE.ready ? '✅ Ready. "Custom voice-over" is now the default in Download video.' : 'Fix the ✗ items (or record the missing scenes) to enable the custom-voice download. You can still preview.'}</p>`;
   $('useMine').disabled = false; $('wav').disabled = false; toast('Voice-over merged');
 };
-$('useMine').onclick = () => { audioMode = audioMode === 'mine' ? 'default' : 'mine'; $('useMine').textContent = audioMode === 'mine' ? '🔊 Back to default voice' : '▶ Preview with my voice'; if (playing) restartSpeech(); if (audioMode === 'mine' && !playing) setPlaying(true); };
+$('useMine').onclick = () => { const on = track !== 'mine'; setTrack(on ? 'mine' : 'A'); $('useMine').textContent = on ? '🔊 Back to default voice' : '▶ Preview with my voice'; if (on && !playing) setPlaying(true); };
 $('wav').onclick = () => MINE.buf && saveBlob(wavBlob(MINE.buf), FILE + '-voiceover.wav');
 function wavBlob(buf) {
   const d = buf.getChannelData(0), n = d.length, ab = new ArrayBuffer(44 + n * 2), v = new DataView(ab), sr = buf.sampleRate;
@@ -1103,9 +1417,11 @@ $('ttl').textContent = `${D.title} · ${fmt(TOTAL)} · ${PHASES.length} steps`;
 document.title = `${D.title} · kona-srinivas-gate`;
 window.__reel = { id: D.id, total: TOTAL, width: W, height: H, fps: 30, scenes: SC.map(s => ({ name: s.name, type: s.type, start: starts[s.i], dur: s.dur, words: s.words.length })), phases: PHASES.length };
 window.__frameAt = (sec, type = 'image/jpeg', q = 0.92) => { draw(sec); return cv.toDataURL(type, q); };
+window.__vcParse = vcParse; window.__heard = heard; window.__state = () => ({ t, playing, speed, vol, muted, track, loop, ccOn, scene: sceneAt(t), voiceA: voiceA && voiceA.name, voiceB: voiceB && voiceB.name, vc: VCX.on });
 window.__overflow = () => [...OVER.values()];
 window.__drawAll = () => { SC.forEach(s => draw(starts[s.i] + s.dur - 0.05)); return [...OVER.values()]; };
 draw(0); requestAnimationFrame(frame);
+if (location.hash === '#autoplay' && navigator.userActivation && navigator.userActivation.hasBeenActive) setPlaying(true);
 })();
 </script>
 </body>
