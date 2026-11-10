@@ -228,7 +228,7 @@ function icon(name, x, y, size, col, lw = 2) {
 
 /* =================== scene preparation & timing =================== */
 const SC = D.scenes.map((s, i) => Object.assign({}, s, { i }));
-const PH_TYPES = new Set(['step', 'flow', 'compare']);
+const PH_TYPES = new Set(['step', 'flow', 'compare', 'viz']);
 let phaseN = 0, curSec = '';
 SC.forEach(s => {
   s.phase = PH_TYPES.has(s.type) && !s.x;
@@ -274,6 +274,21 @@ function anchors(s, labels, f0 = 0.08, f1 = 0.78) {
   });
   return out;
 }
+function vzAnchors(s) {
+  const ws = s.words.map(o => o.w.toLowerCase().replace(/[^a-z0-9]/g, '')), sp = Math.max(1, s.speech), st = s.viz.steps || [], n = st.length, out = []; let k0 = 0;
+  st.forEach((x, i) => {
+    let t;
+    if (x.at != null) t = LEAD + sp * x.at;
+    else {
+      const tk = String(x.k || '').toLowerCase().split(/\s+/).map(w => w.replace(/[^a-z0-9]/g, '')).filter(Boolean); let hit = -1;
+      for (let j = k0; j < ws.length && hit < 0; j++) if (tk.length && tk.every((w, q) => { const z = ws[j + q]; return z != null && (w.length <= 2 ? z === w : z.startsWith(w)); })) hit = j;
+      if (hit >= 0) { t = s.words[hit].t0; k0 = hit + tk.length; } else t = LEAD + sp * (0.05 + 0.75 * (n < 2 ? 0 : i / (n - 1)));
+    }
+    if (out.length && t < out[out.length - 1] + 0.45) t = out[out.length - 1] + 0.45;
+    out.push(Math.min(t, LEAD + sp));
+  });
+  return out;
+}
 function prepReveal(s) {
   const sp = Math.max(1, s.speech);
   if (s.items) s.itT = anchors(s, s.items.map(it => it[1]));
@@ -281,6 +296,7 @@ function prepReveal(s) {
   if (s.rows) s.rwT = anchors(s, s.rows.map(r => Array.isArray(r) ? r[0] : r), 0.1, 0.8);
   if (s.points) s.ptT = anchors(s, s.points, 0.06, 0.8);
   if (s.repos) s.rpT = anchors(s, s.repos.map(r => r[0].split('/').pop().replace(/-/g, ' ')), 0.05, 0.85);
+  if (s.viz) s.vzT = vzAnchors(s);
   if (s.cmd) { const n = s.cmd.length; s.cmT = s.cmd.map((_, k) => LEAD + sp * (0.12 + 0.76 * (n < 2 ? 0 : k / (n - 1)))); }
   s.tipT = LEAD + sp * 0.82;
 }
@@ -308,6 +324,7 @@ function fillRR(x, y, w, h, r, c) { rr(x, y, w, h, r); ctx.fillStyle = c; ctx.fi
 let ccOn = true, ccForce = false;
 function drawChrome(s, t) {
   ctx.fillStyle = TH.bg; ctx.fillRect(0, 0, W, H);
+  { const o = (t * 6) % 48; ctx.fillStyle = 'rgba(255,255,255,0.035)'; for (let x = -48 + o; x < W; x += 48) for (let y = 96; y < 1030; y += 48) ctx.fillRect(x, y, 2, 2); }
   ctx.fillStyle = TH.line; ctx.fillRect(0, 0, W, 5); ctx.fillStyle = TH.accent; ctx.fillRect(0, 0, W * clamp(t / TOTAL), 5);
   ctx.beginPath(); ctx.arc(76, 56, 13, 0, Math.PI * 2); ctx.fillStyle = TH.accent; ctx.fill();
   font(700, 26); ctx.fillStyle = TH.muted; ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.fillText('kona-srinivas-gate', 102, 57);
@@ -531,7 +548,212 @@ function drawRecap(s, L) {
     let x = 760; items.forEach(([ic, lb]) => { icon(ic, x, 794, 36, TH.accent); font(600, 26); ctx.fillStyle = TH.text; ctx.fillText(lb, x + 48, 812); x += 70 + ctx.measureText(lb).width + 40; }); ctx.globalAlpha = 1;
   }
 }
-const DRAW = { hook: drawHook, roadmap: drawRoadmap, step: drawStep, flow: drawFlow, compare: drawCompare, mistakes: drawMistakes, repos: drawRepos, recap: drawRecap };
+/* =================== drawing: animated visualisations (viz scenes) =================== */
+const OFF = document.createElement('canvas'); OFF.width = W; OFF.height = H; const octx = OFF.getContext('2d');
+const easeBack = x => { x = clamp(x); const c = 1.70158; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const lerp = (a, b, p) => a + (b - a) * p;
+const VPAL = ['#58a6ff', '#f778ba', '#3fb950', '#d29922'];
+const VC = k => ({ ok: TH.ok, bad: TH.bad, warn: TH.warn, muted: TH.muted, blue: '#58a6ff', pink: '#f778ba' })[k] || TH.accent;
+function vzBox(v) { const b = v.box || [100, 340, 1720, 440]; return { x: b[0], y: b[1], w: b[2], h: b[3] }; }
+function vzRun(s, L) {
+  const st = s.viz.steps || [], T = s.vzT || [];
+  const R = { k: -1, show: new Map(), hl: new Map(), lab: {}, note: null, noteT: 0, noteCol: null, ops: [] };
+  st.forEach((x, i) => {
+    if (L < T[i]) return; const t0 = T[i]; R.k = i;
+    if (x.clear) R.hl.clear();
+    if (x.unlab) R.lab = {};
+    (x.show || []).forEach(id => R.show.set(String(id), t0));
+    (x.hide || []).forEach(id => R.show.delete(String(id)));
+    (x.hl || []).forEach(id => R.hl.set(String(id), { i, t0, col: x.col }));
+    Object.entries(x.lab || {}).forEach(([id, txt]) => { R.lab[id] = { txt: String(txt), t0, i, col: x.col }; });
+    if (x.note) { R.note = x.note; R.noteT = t0; R.noteCol = x.col; }
+    R.ops.push({ x, i, t0 });
+  });
+  return R;
+}
+function hlOf(R, ...ids) {
+  let best = null; ids.forEach(id => { const h = R.hl.get(String(id)); if (h && (!best || h.i > best.i)) best = h; });
+  return best ? { cur: best.i === R.k, col: best.col ? VC(best.col) : TH.accent, t0: best.t0 } : null;
+}
+function badge(txt, x, y, a, col) {
+  if (a <= 0) return; font(700, 22); const w = ctx.measureText(txt).width + 22, sc = easeBack(a);
+  ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc); ctx.globalAlpha = clamp(a * 1.5);
+  fillRR(-w / 2, -17, w, 34, 17, col ? VC(col) : TH.accent); ctx.fillStyle = '#0b0f17'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(txt, 0, 1);
+  ctx.restore(); ctx.textAlign = 'left'; ctx.globalAlpha = 1;
+}
+function fitText(txt, maxW, w0, px) { font(w0, px); while (ctx.measureText(txt).width > maxW && px > 14) font(w0, --px); return px; }
+function vzNote(R, L) {
+  if (!R.note) return; const a = ease((L - R.noteT) / 0.35);
+  font(600, 30); const l = wrap(R.note, 1690, 1, 'vznote')[0];
+  ctx.globalAlpha = a; ctx.fillStyle = R.noteCol ? VC(R.noteCol) : TH.accent; ctx.textBaseline = 'middle';
+  ctx.fillText('▸  ' + l, 100 + (1 - a) * 24, 300); ctx.globalAlpha = 1;
+}
+function drawViz(s, L) {
+  const a0 = ease(L / 0.35);
+  chip(s.phase ? `STEP ${s.pn} / ${PHASES.length}` + (s.secName ? `  ·  ${s.secName.toUpperCase()}` : '') : (s.chip || s.name).toUpperCase(), 100, 132, a0);
+  title(s.title, 100, 196, 1720, a0, 56, 1);
+  const R = vzRun(s, L), v = s.viz;
+  ({ graph: vzGraph, array: vzArray, grid: vzGrid, venn: vzVenn, plot: vzPlot }[v.kind] || vzGraph)(s, L, R, v);
+  vzNote(R, L); tipBar(s, L, 100, 800, 1720);
+}
+
+/* ---- graph: nodes [id, x%, y%, label?], edges [a, b, label?, bend?] ---- */
+function qpt(ax, ay, cx, cy, bx, by, u) { const m = 1 - u; return [m * m * ax + 2 * m * u * cx + u * u * bx, m * m * ay + 2 * m * u * cy + u * u * by]; }
+function vzGraph(s, L, R, v) {
+  const B = vzBox(v), r = v.r || 40, nw = v.nw || 0, N = {}, ne = v.nodes.length;
+  v.nodes.forEach((n, k) => { const id = String(n[0]); N[id] = { id, x: B.x + n[1] / 100 * B.w, y: B.y + n[2] / 100 * B.h, lab: n[3] != null ? String(n[3]) : id, t: v.build ? (R.show.has(id) ? R.show.get(id) : (v.base || []).map(String).includes(id) ? 0.15 + k * 0.06 : null) : 0.15 + k * 0.06 }; });
+  const rad = n => nw ? Math.max(nw / 2, r) * 0.82 : r;
+  (v.edges || []).forEach((e, k) => {
+    const A = N[e[0]], Bn = N[e[1]], key = e[0] + '-' + e[1]; if (!A || !Bn || A.t == null || Bn.t == null) return;
+    let t0 = v.build ? (R.show.has(key) ? R.show.get(key) : (v.base || []).includes(key) ? 0.2 + ne * 0.06 + k * 0.04 : null) : 0.2 + ne * 0.06 + k * 0.04; if (t0 == null) return;
+    t0 = Math.max(t0, A.t + 0.2, Bn.t + 0.2); const p = ease((L - t0) / 0.5); if (p <= 0) return;
+    const h = hlOf(R, key, ...(v.dir ? [] : [e[1] + '-' + e[0]]));
+    const col = h ? h.col : '#3a4560'; ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = h ? (h.cur ? 6 : 4.5) : 3; ctx.globalAlpha = h && !h.cur ? 0.8 : 1;
+    let pts = [];
+    if (e[0] === e[1]) { const cx = A.x, cy = A.y - r - 20; for (let u = 0; u <= 1.0001; u += 1 / 32) { const g = Math.PI * (0.62 + 1.76 * u); pts.push([cx + 26 * Math.cos(g), cy + 26 * Math.sin(g)]); } }
+    else {
+      const dx = Bn.x - A.x, dy = Bn.y - A.y, d = Math.hypot(dx, dy) || 1, nx = -dy / d, ny = dx / d, bend = e[3] || 0;
+      const cx = (A.x + Bn.x) / 2 + nx * bend, cy = (A.y + Bn.y) / 2 + ny * bend;
+      const u0 = (rad(A) + 2) / d, u1 = 1 - (rad(Bn) + (v.dir ? 8 : 2)) / d;
+      for (let j = 0; j <= 40; j++) pts.push(qpt(A.x, A.y, cx, cy, Bn.x, Bn.y, lerp(u0, u1, j / 40)));
+    }
+    const m = Math.max(1, Math.round((pts.length - 1) * p)); ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let j = 1; j <= m; j++) ctx.lineTo(pts[j][0], pts[j][1]); ctx.stroke();
+    if ((v.dir || e[0] === e[1]) && p > 0.95) { const [x2, y2] = pts[pts.length - 1], [x1, y1] = pts[pts.length - 3]; const g = Math.atan2(y2 - y1, x2 - x1), z = h ? 20 : 16;
+      ctx.beginPath(); ctx.moveTo(x2 + Math.cos(g) * 4, y2 + Math.sin(g) * 4); ctx.lineTo(x2 - z * Math.cos(g - 0.45), y2 - z * Math.sin(g - 0.45)); ctx.lineTo(x2 - z * Math.cos(g + 0.45), y2 - z * Math.sin(g + 0.45)); ctx.closePath(); ctx.fill(); }
+    if (h && h.cur) { const q = ((L - h.t0) % 1.3) / 1.3, [tx, ty] = pts[Math.floor(q * (pts.length - 1))]; ctx.globalAlpha = 1; ctx.beginPath(); ctx.arc(tx, ty, 9, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill(); }
+    if (e[2] && p > 0.6) { const [mx, my] = pts[Math.floor(pts.length / 2)]; font(600, 22); const tw = ctx.measureText(String(e[2])).width + 18; ctx.globalAlpha = clamp((p - 0.6) * 3);
+      fillRR(mx - tw / 2, my - 16, tw, 32, 10, TH.bg); ctx.strokeStyle = col; ctx.lineWidth = 1.5; rr(mx - tw / 2, my - 16, tw, 32, 10); ctx.stroke(); ctx.fillStyle = h ? h.col : TH.muted; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(e[2]), mx, my + 1); ctx.textAlign = 'left'; }
+    ctx.globalAlpha = 1;
+  });
+  Object.values(N).forEach(n => {
+    if (n.t == null) return; const a = clamp((L - n.t) / 0.45); if (a <= 0) return;
+    const hs = hlOf(R, n.id), pulse = hs && hs.cur ? 1 + 0.05 * Math.sin((L - hs.t0) * 6) : 1, sc = easeBack(a) * pulse;
+    ctx.save(); ctx.translate(n.x, n.y); ctx.scale(sc, sc); ctx.globalAlpha = clamp(a * 1.4);
+    if (hs && hs.cur) { ctx.beginPath(); if (nw) ctx.roundRect(-nw / 2 - 10, -r * 0.8 - 10, nw + 20, r * 1.6 + 20, 22); else ctx.arc(0, 0, r + 11, 0, Math.PI * 2); ctx.strokeStyle = hexA(hs.col, 0.3); ctx.lineWidth = 6; ctx.stroke(); }
+    ctx.beginPath(); if (nw) ctx.roundRect(-nw / 2, -r * 0.8, nw, r * 1.6, 16); else ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fillStyle = hs ? hexA(hs.col, hs.cur ? 0.34 : 0.2) : TH.surface2; ctx.fill(); ctx.lineWidth = hs ? (hs.cur ? 4.5 : 3) : 2; ctx.strokeStyle = hs ? hs.col : '#3a4560'; ctx.stroke();
+    fitText(n.lab, (nw || 2 * r) - 14, 700, v.fs || 28); ctx.fillStyle = TH.text; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(n.lab, 0, 1);
+    ctx.restore(); ctx.textAlign = 'left'; ctx.globalAlpha = 1;
+    const lb = R.lab[n.id]; if (lb) badge(lb.txt, n.x + (nw ? nw / 2 : r * 0.85), n.y - (nw ? r * 0.8 : r * 0.85), ease((L - lb.t0) / 0.35), lb.col);
+  });
+}
+
+/* ---- array: cells [v...]; steps: hl [i], swap [i, j], set {i: v}, ok [i...], ptr {name: i} ---- */
+function vzArray(s, L, R, v) {
+  const B = vzBox(v), vals = v.cells.map(String), n = vals.length, gx = 14;
+  const cw = Math.min(v.cw || 170, (B.w - gx * (n - 1)) / n), ch = Math.min(150, cw * 0.95);
+  const x0 = B.x + (B.w - (n * cw + (n - 1) * gx)) / 2, y0 = B.y + (v.y0 != null ? v.y0 : 110), X = k => x0 + k * (cw + gx);
+  const setT = {}, okS = new Set(), ptr = {}; let anim = null;
+  R.ops.forEach(({ x, t0 }) => {
+    if (x.swap) { const [i, j] = x.swap; [vals[i], vals[j]] = [vals[j], vals[i]]; anim = L - t0 < 0.7 ? { i, j, p: ease((L - t0) / 0.7) } : (anim && anim.t0 === t0 ? anim : null); }
+    Object.entries(x.set || {}).forEach(([i, val]) => { vals[+i] = String(val); setT[+i] = t0; });
+    (x.ok || []).forEach(i => okS.add(+i));
+    Object.entries(x.ptr || {}).forEach(([nm, i]) => { ptr[nm] = { i: +i, from: ptr[nm] ? ptr[nm].i : +i, t0 }; });
+  });
+  if (v.label) { font(700, 30); ctx.fillStyle = TH.muted; ctx.textBaseline = 'middle'; ctx.textAlign = 'right'; ctx.fillText(v.label, x0 - 22, y0 + ch / 2); ctx.textAlign = 'left'; }
+  for (let k = 0; k < n; k++) {
+    const a = clamp((L - 0.15 - k * 0.04) / 0.4); if (a <= 0) continue;
+    let x = X(k), yo = 0; if (anim && k === anim.i) { x = lerp(X(anim.j), X(anim.i), anim.p); yo = -Math.sin(Math.PI * anim.p) * 130; } if (anim && k === anim.j) { x = lerp(X(anim.i), X(anim.j), anim.p); yo = Math.sin(Math.PI * anim.p) * 130; }
+    const hs = hlOf(R, k), ok = okS.has(k), col = ok && !(hs && hs.cur) ? TH.ok : hs ? hs.col : null, y = y0 + yo + (1 - easeBack(a)) * 30;
+    ctx.globalAlpha = clamp(a * 1.4); fillRR(x, y, cw, ch, 14, col ? hexA(col, hs && hs.cur ? 0.32 : 0.2) : TH.surface2);
+    ctx.lineWidth = col ? (hs && hs.cur ? 4.5 : 3) : 2; ctx.strokeStyle = col || '#3a4560'; rr(x, y, cw, ch, 14); ctx.stroke();
+    const ps = setT[k] != null ? easeBack((L - setT[k]) / 0.35) : 1, px = fitText(vals[k], cw - 16, 700, v.fs || 52);
+    ctx.save(); ctx.translate(x + cw / 2, y + ch / 2); ctx.scale(ps, ps); ctx.fillStyle = TH.text; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(vals[k], 0, 2); ctx.restore();
+    if (v.idx !== false) { font(600, 24); ctx.fillStyle = TH.muted; ctx.textAlign = 'center'; ctx.fillText(String((v.base || 0) + k), X(k) + cw / 2, y0 + ch + 24); ctx.textAlign = 'left'; }
+    ctx.globalAlpha = 1;
+  }
+  const at = {}; Object.entries(ptr).forEach(([nm, p], j) => {
+    const q = ease((L - p.t0) / 0.4), cx = lerp(X(p.from), X(p.i), q) + cw / 2, lvl = at[p.i] = (at[p.i] || 0) + 1, y = y0 + ch + 48 + (lvl - 1) * 70, col = VPAL[j % 4];
+    ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(cx, y); ctx.lineTo(cx - 16, y + 24); ctx.lineTo(cx + 16, y + 24); ctx.closePath(); ctx.fill();
+    font(800, 30); ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText(nm, cx, y + 28); ctx.textAlign = 'left';
+  });
+}
+
+/* ---- grid: cols [], rows [] (optional headers), cells [[...]]; steps: hl ['r2' | 'c1' | '2,1'], set {'2,1': v} ---- */
+function vzGrid(s, L, R, v) {
+  const B = vzBox(v), cells = v.cells.map(r => r.map(String)), nr = cells.length, nc = cells[0].length, hasH = !!(v.cols && v.cols.length);
+  const hw = v.rows ? (v.hw || 170) : 0, cw = Math.min(v.cw || 240, (B.w - hw) / nc), rh = Math.min(v.rh || 74, B.h / (nr + (hasH ? 1 : 0)));
+  const x0 = B.x + (B.w - hw - nc * cw) / 2, y0 = B.y, setT = {};
+  R.ops.forEach(({ x, t0 }) => Object.entries(x.set || {}).forEach(([rc, val]) => { const [r, c] = rc.split(',').map(Number); cells[r][c] = String(val); setT[rc] = t0; }));
+  const yRow = r => y0 + (r + (hasH ? 1 : 0)) * rh;
+  if (hasH) { ctx.globalAlpha = ease(L / 0.4); fillRR(x0, y0 + 3, hw + nc * cw, rh - 6, 10, TH.surface2); v.cols.forEach((c, k) => { fitText(String(c), cw - 12, 700, 30); ctx.fillStyle = TH.accent; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(c), x0 + hw + k * cw + cw / 2, y0 + rh / 2); }); if (v.corner) { fitText(v.corner, hw - 12, 700, 24); ctx.fillStyle = TH.muted; ctx.fillText(v.corner, x0 + hw / 2, y0 + rh / 2); } ctx.textAlign = 'left'; ctx.globalAlpha = 1; }
+  for (let r = 0; r < nr; r++) {
+    const a = clamp((L - 0.2 - r * 0.05) / 0.4); if (a <= 0) continue; const y = yRow(r), hr = hlOf(R, 'r' + r);
+    ctx.globalAlpha = a; fillRR(x0, y + 3, hw + nc * cw, rh - 6, 10, hr ? hexA(hr.col, hr.cur ? 0.2 : 0.1) : (r % 2 ? TH.surface : 'rgba(255,255,255,0.02)'));
+    if (hr && hr.cur) { ctx.fillStyle = hr.col; ctx.fillRect(x0, y + 10, 5, rh - 20); }
+    if (v.rows) { fitText(String(v.rows[r]), hw - 16, 700, 26); ctx.fillStyle = TH.text; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(v.rows[r]), x0 + hw / 2, y + rh / 2); }
+    for (let c = 0; c < nc; c++) {
+      const val = cells[r][c], key = r + ',' + c, h = hlOf(R, key, 'c' + c), cx = x0 + hw + c * cw;
+      if (h && (h.cur || R.hl.get(key))) { fillRR(cx + 6, y + 7, cw - 12, rh - 14, 8, hexA(h.col, h.cur ? 0.38 : 0.2)); if (h.cur) { ctx.strokeStyle = h.col; ctx.lineWidth = 2.5; rr(cx + 6, y + 7, cw - 12, rh - 14, 8); ctx.stroke(); } }
+      if (!val) continue; const ps = setT[key] != null ? easeBack((L - setT[key]) / 0.35) : 1;
+      fitText(val, cw - 18, 650, v.fs || 34); ctx.fillStyle = v.tint && v.tint[val] ? VC(v.tint[val]) : TH.text;
+      ctx.save(); ctx.translate(cx + cw / 2, y + rh / 2); ctx.scale(ps, ps); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(val, 0, 1); ctx.restore();
+    }
+    ctx.textAlign = 'left'; ctx.globalAlpha = 1;
+  }
+}
+
+/* ---- venn: sets ['A','B'(,'C')], labels {region: text}; region codes = included set letters, '0' = outside ---- */
+function vennGeom(v, B) {
+  const cx = B.x + (v.cx != null ? v.cx / 100 * B.w : B.w / 2);
+  return v.sets.length === 2 ? [[cx - 140, 560, 190], [cx + 140, 560, 190]] : [[cx - 92, 488, 128], [cx + 92, 488, 128], [cx, 638, 128]];
+}
+function vennIn(v, C, code, x, y) { return v.sets.every((nm, i) => (Math.hypot(x - C[i][0], y - C[i][1]) < C[i][2]) === (code !== '0' && code.includes(nm))); }
+function vzVenn(s, L, R, v) {
+  const B = vzBox(v), C = vennGeom(v, B), cx = B.x + (v.cx != null ? v.cx / 100 * B.w : B.w / 2), U = [cx - 440, 336, 880, 446], a0 = ease((L - 0.1) / 0.5);
+  if (!s._vc) { s._vc = {}; const codes = new Set([...Object.keys(v.labels || {}), ...(v.steps || []).flatMap(x => [...(x.hl || []), ...Object.keys(x.lab || {})])]);
+    codes.forEach(code => { if (code === '0') { s._vc[code] = [U[0] + 60, U[1] + 34]; return; } let sx = 0, sy = 0, k = 0; for (let x = U[0]; x < U[0] + U[2]; x += 6) for (let y = U[1]; y < U[1] + U[3]; y += 6) if (vennIn(v, C, code, x, y)) { sx += x; sy += y; k++; } s._vc[code] = k ? [sx / k, sy / k] : [cx, 560]; }); }
+  ctx.globalAlpha = a0; ctx.strokeStyle = TH.line; ctx.lineWidth = 2; rr(U[0], U[1], U[2], U[3], 18); ctx.stroke(); font(700, 24); ctx.fillStyle = TH.muted; ctx.textBaseline = 'top'; ctx.fillText(v.U || 'U', U[0] + U[2] - 40, U[1] + 12); ctx.globalAlpha = 1;
+  [...R.hl.entries()].forEach(([code, h]) => {
+    const cur = h.i === R.k, col = h.col ? VC(h.col) : TH.accent, a = ease((L - h.t0) / 0.4) * (code === '0' ? (cur ? 0.22 : 0.12) : (cur ? 0.5 + 0.08 * Math.sin((L - h.t0) * 5) : 0.3));
+    octx.setTransform(1, 0, 0, 1, 0, 0); octx.globalCompositeOperation = 'source-over'; octx.clearRect(U[0], U[1], U[2], U[3]); octx.fillStyle = col;
+    if (code === '0') { octx.fillRect(U[0], U[1], U[2], U[3]); v.sets.forEach((nm, i) => { octx.globalCompositeOperation = 'destination-out'; octx.beginPath(); octx.arc(C[i][0], C[i][1], C[i][2], 0, Math.PI * 2); octx.fill(); }); }
+    else { octx.fillRect(U[0], U[1], U[2], U[3]); v.sets.forEach((nm, i) => { octx.globalCompositeOperation = code.includes(nm) ? 'destination-in' : 'destination-out'; octx.beginPath(); octx.arc(C[i][0], C[i][1], C[i][2], 0, Math.PI * 2); octx.fill(); }); }
+    octx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = a; ctx.drawImage(OFF, U[0], U[1], U[2], U[3], U[0], U[1], U[2], U[3]); ctx.globalAlpha = 1;
+  });
+  v.sets.forEach((nm, i) => { const a = ease((L - 0.2 - i * 0.15) / 0.5), [x, y, r] = C[i], col = VPAL[i]; if (a <= 0) return; ctx.globalAlpha = a;
+    ctx.beginPath(); ctx.arc(x, y, r * (0.85 + 0.15 * easeBack(a)), 0, Math.PI * 2); ctx.fillStyle = hexA(col, 0.06); ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = col; ctx.stroke();
+    font(800, 34); ctx.fillStyle = col; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const lx = v.sets.length === 2 ? x + (i ? 1 : -1) * r * 0.78 : x + (i === 2 ? r * 0.95 : (i ? 1 : -1) * r * 0.8), ly = v.sets.length === 2 ? y - r * 0.82 : (i === 2 ? y + r * 0.7 : y - r * 0.8);
+    ctx.fillText((v.names && v.names[i]) || nm, lx, ly); ctx.textAlign = 'left'; ctx.globalAlpha = 1; });
+  const labs = Object.assign({}, ...Object.entries(v.labels || {}).map(([k, t]) => ({ [k]: { txt: String(t), t0: 0.6 } })), R.lab);
+  Object.entries(labs).forEach(([code, lb]) => { const p = s._vc[code]; if (!p) return; const a = ease((L - lb.t0) / 0.35); if (a <= 0) return; const sc = easeBack(a);
+    ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(sc, sc); ctx.globalAlpha = clamp(a * 1.5); font(800, 34); ctx.fillStyle = lb.col ? VC(lb.col) : TH.text; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(lb.txt, 0, 0); ctx.restore(); ctx.textAlign = 'left'; ctx.globalAlpha = 1; });
+  if (v.side) { const sx = cx + 520; v.side.forEach((t, k) => { const a = ease((L - 0.5 - k * 0.1) / 0.4); ctx.globalAlpha = a; font(600, 26); ctx.fillStyle = TH.muted; ctx.textBaseline = 'middle'; ctx.fillText(wrap(t, 1820 - sx, 1, 'vside')[0], sx, 380 + k * 44); }); ctx.globalAlpha = 1; }
+}
+
+/* ---- plot: x [a, b], y [c, d], fns [{f, label}]; steps: show ['f0'], pt [[x, y, label]], shade {f, a, b}, tan {f, x}, vline [x] ---- */
+function vzPlot(s, L, R, v) {
+  const B = vzBox(v), [xa, xb] = v.x, [ya, yb] = v.y, X = x => B.x + (x - xa) / (xb - xa) * B.w, Y = y => B.y + B.h - (y - ya) / (yb - ya) * B.h, a0 = ease((L - 0.1) / 0.4);
+  if (!s._f) s._f = (v.fns || []).map(f => new Function('x', 'with (Math) { return (' + f.f + '); }'));
+  const F = (i, x) => { try { const y = s._f[i](x); return isFinite(y) ? y : NaN; } catch (e) { return NaN; } };
+  const ax = ya <= 0 && yb >= 0 ? Y(0) : B.y + B.h, ay = xa <= 0 && xb >= 0 ? X(0) : B.x;
+  ctx.globalAlpha = a0; ctx.strokeStyle = '#3a4560'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(B.x, ax); ctx.lineTo(B.x + B.w, ax); ctx.moveTo(ay, B.y); ctx.lineTo(ay, B.y + B.h); ctx.stroke();
+  font(500, 20); ctx.fillStyle = TH.muted; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  if (v.xt) for (let x = Math.ceil(xa / v.xt) * v.xt; x <= xb + 1e-9; x += v.xt) { if (Math.abs(x) < 1e-9 && ay > B.x) continue; ctx.fillRect(X(x) - 1, ax - 6, 2, 12); ctx.fillText(String(+x.toFixed(3)), X(x), ax + 10); }
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  if (v.yt) for (let y = Math.ceil(ya / v.yt) * v.yt; y <= yb + 1e-9; y += v.yt) { if (Math.abs(y) < 1e-9) continue; ctx.fillRect(ay - 6, Y(y) - 1, 12, 2); ctx.fillText(String(+y.toFixed(3)), ay - 12, Y(y)); }
+  ctx.textAlign = 'left'; ctx.globalAlpha = 1;
+  ctx.save(); ctx.beginPath(); ctx.rect(B.x, B.y - 10, B.w, B.h + 20); ctx.clip();
+  R.ops.forEach(({ x: o, t0 }) => { if (!o.shade) return; const { f, a, b } = o.shade, p = ease((L - t0) / 0.9), e = a + (b - a) * p; ctx.beginPath(); ctx.moveTo(X(a), Y(0));
+    for (let j = 0; j <= 120; j++) { const x = a + (e - a) * j / 120, y = F(f, x); if (!isNaN(y)) ctx.lineTo(X(x), Y(y)); } ctx.lineTo(X(e), Y(0)); ctx.closePath(); ctx.fillStyle = hexA(o.col ? VC(o.col) : TH.accent, 0.28); ctx.fill(); });
+  (v.fns || []).forEach((fn, i) => {
+    const t0 = v.build ? R.show.get('f' + i) : 0.3 + i * 0.4; if (t0 == null) return; const p = ease((L - t0) / 1.4); if (p <= 0) return; const col = fn.col ? VC(fn.col) : i ? VPAL[(i - 1) % 4] : TH.accent;
+    ctx.strokeStyle = col; ctx.lineWidth = 5; ctx.beginPath(); let pen = false;
+    for (let j = 0; j <= 600 * p; j++) { const x = xa + (xb - xa) * j / 600, y = F(i, x); if (isNaN(y) || y > yb + (yb - ya) || y < ya - (yb - ya)) { pen = false; continue; } pen ? ctx.lineTo(X(x), Y(y)) : ctx.moveTo(X(x), Y(y)); pen = true; } ctx.stroke();
+    if (fn.label && p > 0.9) { const lx = fn.lx != null ? fn.lx : xa + (xb - xa) * 0.9, ly = F(i, lx); font(700, 28); ctx.fillStyle = col; ctx.textBaseline = 'bottom'; ctx.fillText(fn.label, X(lx) + 10, Y(isNaN(ly) ? yb : ly) - 10); }
+  });
+  ctx.restore();
+  R.ops.forEach(({ x: o, t0, i }) => {
+    const p = ease((L - t0) / 0.5), col = o.col ? VC(o.col) : '#ffffff';
+    (o.vline || []).forEach(x => { ctx.setLineDash([10, 8]); ctx.strokeStyle = hexA(TH.muted, 0.8); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(X(x), B.y + B.h); ctx.lineTo(X(x), lerp(B.y + B.h, B.y, p)); ctx.stroke(); ctx.setLineDash([]); });
+    if (o.tan) { const { f, x } = o.tan, h = 1e-4 * (xb - xa), m = (F(f, x + h) - F(f, x - h)) / (2 * h), y = F(f, x), w = (xb - xa) * 0.22 * p; ctx.strokeStyle = o.col ? VC(o.col) : TH.warn; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(X(x - w), Y(y - m * w)); ctx.lineTo(X(x + w), Y(y + m * w)); ctx.stroke(); }
+    if (o.sec) { const { f, a, b } = o.sec, ya2 = F(f, a), yb2 = F(f, b); ctx.strokeStyle = o.col ? VC(o.col) : '#f778ba'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(X(a), Y(ya2)); ctx.lineTo(X(lerp(a, b, p)), Y(lerp(ya2, yb2, p))); ctx.stroke(); }
+    (o.pt || []).forEach(([x, y, lab]) => { const yy = typeof y === 'string' ? F(+y.slice(1), x) : y, sc = easeBack(p); ctx.beginPath(); ctx.arc(X(x), Y(yy), 10 * sc, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill(); ctx.strokeStyle = TH.bg; ctx.lineWidth = 3; ctx.stroke(); if (lab) badge(String(lab), X(x), Y(yy) - 34, p, o.col); });
+  });
+}
+
+const DRAW = { hook: drawHook, roadmap: drawRoadmap, step: drawStep, flow: drawFlow, compare: drawCompare, mistakes: drawMistakes, repos: drawRepos, recap: drawRecap, viz: drawViz };
 function sceneAt(t) { for (let k = 0; k < SC.length; k++) if (t < starts[k] + SC[k].dur) return k; return SC.length - 1; }
 function draw(t) {
   t = clamp(t, 0, TOTAL - 0.001); const i = sceneAt(t), s = SC[i], L = t - starts[i];

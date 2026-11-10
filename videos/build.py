@@ -18,7 +18,7 @@ def load(path):
 def norm(d):
     for s in d['scenes']:
         if 'type' not in s:
-            s['type'] = 'flow' if 'nodes' in s else 'compare' if 'cols' in s else 'step'
+            s['type'] = 'viz' if 'viz' in s else 'flow' if 'nodes' in s else 'compare' if 'cols' in s else 'step'
     return d
 
 def duration(d):
@@ -39,6 +39,21 @@ def check(d):
         for r in s.get('repos', []):
             if len(r) > 3 and r[3] not in ICONS: errs.append(f'{tag}: unknown icon {r[3]}')
         if s.get('icon') and s['icon'] not in ICONS: errs.append(f"{tag}: unknown icon {s['icon']}")
+        if s['type'] == 'viz':
+            v = s['viz']
+            if v.get('kind') not in ('graph', 'array', 'grid', 'venn', 'plot'): errs.append(f"{tag}: unknown viz kind {v.get('kind')}")
+            if v.get('kind') == 'graph':
+                ids = {str(n[0]) for n in v['nodes']}
+                for e in v.get('edges', []):
+                    if str(e[0]) not in ids or str(e[1]) not in ids: errs.append(f'{tag}: edge {e[:2]} uses unknown node')
+            ws = [re.sub(r'[^a-z0-9]', '', w.lower()) for w in str(s.get('n', '')).split()]; k0 = 0
+            for st in v.get('steps', []):
+                if st.get('at') is not None: continue
+                tk = [x for x in (re.sub(r'[^a-z0-9]', '', w.lower()) for w in str(st.get('k', '')).split()) if x]
+                hit = next((j for j in range(k0, len(ws)) if tk and all(j + q < len(ws) and (ws[j + q] == w if len(w) <= 2 else ws[j + q].startswith(w)) for q, w in enumerate(tk))), -1)
+                if hit < 0: errs.append(f"{tag}: viz cue {st.get('k')!r} not found in narration (in order)")
+                else: k0 = hit + len(tk)
+            if v.get('kind') == 'grid' and len({len(r) for r in v['cells']}) != 1: errs.append(f'{tag}: grid rows differ in length')
         if s['type'] == 'compare':
             for r in s['rows']:
                 if len(r) - len(s['cols']) not in (0, 1): errs.append(f'{tag}: row {r[0]!r} has {len(r)} cells for {len(s["cols"])} headers')
@@ -92,7 +107,7 @@ if __name__ == '__main__':
         if only and d['id'] not in only: continue
         if d['id'] not in known: bad.append(f"{d['id']}: not in syllabus.js")
         bad += check(d); build(d)
-        ph = sum(1 for s in d['scenes'] if s['type'] in ('step', 'flow', 'compare') and not s.get('x'))
+        ph = sum(1 for s in d['scenes'] if s['type'] in ('step', 'flow', 'compare', 'viz') and not s.get('x'))
         dur = duration(d); words = sum(len(str(s.get('n', '')).split()) for s in d['scenes'])
         built[d['id']] = dict(dur=dur, phases=ph, scenes=len(d['scenes']))
         tgt = d.get('target', 0) * 60
