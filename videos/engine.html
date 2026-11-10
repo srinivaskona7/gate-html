@@ -562,8 +562,8 @@ function vzRun(s, L) {
     if (L < T[i]) return; const t0 = T[i]; R.k = i;
     if (x.clear) R.hl.clear();
     if (x.unlab) R.lab = {};
-    (x.show || []).forEach(id => R.show.set(String(id), t0));
     (x.hide || []).forEach(id => R.show.delete(String(id)));
+    (x.show || []).forEach(id => R.show.set(String(id), t0));
     (x.hl || []).forEach(id => R.hl.set(String(id), { i, t0, col: x.col }));
     Object.entries(x.lab || {}).forEach(([id, txt]) => { R.lab[id] = { txt: String(txt), t0, i, col: x.col }; });
     if (x.note) { R.note = x.note; R.noteT = t0; R.noteCol = x.col; }
