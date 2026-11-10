@@ -11,7 +11,16 @@ _ic = ENGINE.split('const IC = {')[1].split('};')[0]
 ICONS = set(re.findall(r"^\s{2}(\w+): '", _ic, re.M)) | set(re.findall(r",\s(\w+): '", _ic))
 WPS, PAD, LEAD = 2.15, 1.4, 0.35
 
+def syntax_check(path):
+    """Fail early with the file/line when a content file does not parse (usually an unescaped apostrophe)."""
+    r = subprocess.run(['node', '--check', str(path)], capture_output=True, text=True)
+    if r.returncode:
+        lines = [l for l in r.stderr.splitlines() if l.strip()][:6]
+        raise SystemExit(f"SYNTAX ERROR in {path.name} (unescaped apostrophe in a string?)\n" + "\n".join(lines))
+
+
 def load(path):
+    syntax_check(pathlib.Path(path))
     out = subprocess.check_output(['node', '-e', f"process.stdout.write(JSON.stringify(require({json.dumps(str(path))})))"])
     return json.loads(out)
 

@@ -1,10 +1,10 @@
 # GATE CS 2027 video progress
 
-**6 of 88 modules complete.** Regenerate with `python3 progress.py`.
+**7 of 88 modules complete.** Regenerate with `python3 progress.py`.
 
 | Section | Done | Next up |
 |---|---|---|
-| Engineering Mathematics | 6/23 | Graph Matching |
+| Engineering Mathematics | 7/23 | Graph Colouring |
 | Digital Logic | 0/6 | Boolean Algebra and K-Maps |
 | Computer Organization and Architecture | 0/7 | Instruction Set and Addressing Modes |
 | Programming and Data Structures | 0/8 | Programming in C |
@@ -23,7 +23,7 @@
 - [x] **Partial Orders and Lattices** (`partial-orders-lattices`): Posets, Hasse diagrams, bounds, lattices and distributivity
 - [x] **Monoids and Groups** (`monoids-groups`): Closure to inverses, cyclic groups, subgroups and Lagrange
 - [x] **Graph Connectivity** (`graph-connectivity`): Paths, components, cut vertices, bridges and Euler/Hamilton
-- [ ] **Graph Matching** (`graph-matching`): Matchings, bipartite graphs, Hall's theorem and covers
+- [x] **Graph Matching** (`graph-matching`): Matchings, bipartite graphs, Hall's theorem and covers
 - [ ] **Graph Colouring** (`graph-colouring`): Chromatic number, bounds, planar graphs and chromatic polynomials
 - [ ] **Counting** (`counting`): Product and sum rules, permutations, combinations, pigeonhole, inclusion-exclusion
 - [ ] **Recurrence Relations** (`recurrence-relations`): Linear recurrences, characteristic roots and particular solutions
