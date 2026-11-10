@@ -1,10 +1,10 @@
 # GATE CS 2027 video progress
 
-**9 of 88 modules complete.** Regenerate with `python3 progress.py`.
+**10 of 88 modules complete.** Regenerate with `python3 progress.py`.
 
 | Section | Done | Next up |
 |---|---|---|
-| Engineering Mathematics | 9/23 | Recurrence Relations |
+| Engineering Mathematics | 10/23 | Generating Functions |
 | Digital Logic | 0/6 | Boolean Algebra and K-Maps |
 | Computer Organization and Architecture | 0/7 | Instruction Set and Addressing Modes |
 | Programming and Data Structures | 0/8 | Programming in C |
@@ -26,7 +26,7 @@
 - [x] **Graph Matching** (`graph-matching`): Matchings, bipartite graphs, Hall's theorem and covers
 - [x] **Graph Colouring** (`graph-colouring`): Chromatic number, bounds, planar graphs and chromatic polynomials
 - [x] **Counting** (`counting`): Product and sum rules, permutations, combinations, pigeonhole, inclusion-exclusion
-- [ ] **Recurrence Relations** (`recurrence-relations`): Linear recurrences, characteristic roots and particular solutions
+- [x] **Recurrence Relations** (`recurrence-relations`): Linear recurrences, characteristic roots and particular solutions
 - [ ] **Generating Functions** (`generating-functions`): Ordinary generating functions for counting and recurrences
 - [ ] **Matrices and Determinants** (`matrices-determinants`): Matrix algebra, rank, determinant properties and inverses
 - [ ] **Systems of Linear Equations** (`linear-systems`): Gaussian elimination, rank test, unique, infinite or no solution
