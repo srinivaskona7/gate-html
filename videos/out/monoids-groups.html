@@ -920,8 +920,8 @@ function say(c) {
   u.onend = done; u.onerror = done;
   SP.active++; SP.uStart = SP.uStart || performance.now(); synth.speak(u);
 }
-function speakFrom(i, local) {                // interrupt: cancel + start scene i at local seconds
-  stopSpeech(); if (!speechWanted()) return;
+function speakFrom(i, local, keep) {          // interrupt: cancel + start scene i at local seconds (keep: chain after the finished scene, no cancel)
+  if (keep && speechWanted()) { clearTimeout(SP.timer); SP.timerOn = false; } else { stopSpeech(); if (!speechWanted()) return; }
   const ws = SC[i].words; SP.queued = i; if (!ws.length) return;
   const k = local < LEAD ? 0 : ws.findIndex(w => w.t1 > local); if (k < 0) return;
   const sp = REC ? 1 : speed, g = SP.gen;
@@ -982,11 +982,11 @@ function setPlaying(p) {
   $('bPlay').textContent = p ? '❚❚ Pause' : '▶ Play';
   if (p) { if (!was) resumeSpeech(); } else if (was || SP.active) { clearTimeout(SP.deb); if (t >= TOTAL - 0.01) stopSpeech(); else pauseSpeech(); }
 }
-function seekTo(v) { t = clamp(v, 0, TOTAL - 0.001); cur = sceneAt(t); hideEnd(); SP.drift = 0; if (playing) { stopSpeech(); restartSpeechSoon(120); } }
+function seekTo(v) { t = clamp(v, 0, TOTAL - 0.001); cur = sceneAt(t); hideEnd(); SP.drift = 0; stopSpeech(); if (playing) restartSpeechSoon(120); }
 function gotoScene(k) { seekTo(starts[clamp(k, 0, SC.length - 1)] + 0.001); }
 function prevScene() { const c = sceneAt(t); gotoScene(t - starts[c] > 2 ? c : c - 1); }
 function nextScene() { const c = sceneAt(t); if (c + 1 < SC.length) gotoScene(c + 1); else toast('Last scene'); }
-function setSpeed(n) { speed = n; document.querySelectorAll('#speeds button').forEach(b => b.classList.toggle('on', +b.dataset.s === n)); if (playing) restartSpeechSoon(250); }
+function setSpeed(n) { speed = n; document.querySelectorAll('#speeds button').forEach(b => b.classList.toggle('on', +b.dataset.s === n)); if (playing) restartSpeechSoon(250); else stopSpeech(); }
 function setVol(v, say) {
   vol = clamp(Math.round(v * 100) / 100); $('vol').value = Math.round(vol * 100); LS.set('kd-vol', vol);
   if (muted && vol > 0) setMuted(false); if (say) toast(`Volume ${Math.round(vol * 100)}%`, 900);
@@ -1015,7 +1015,7 @@ function frame(now) {
   const i = sceneAt(t);
   if (i !== cur) {
     const prev = cur; cur = i; const over = prev >= 0 && SP.hold >= HOLDMAX && SP.left[prev] > 0; SP.hold = 0;
-    if ((playing || REC) && (over || SP.queued !== i)) speakFrom(i, t - starts[i]);
+    if ((playing || REC) && (over || SP.queued !== i)) speakFrom(i, t - starts[i], !over && i === prev + 1 && SP.queued === prev && !SP.paused);
   }
   if (playing || REC) aheadTick();
   draw(t); syncMine(); if (REC) recTick(); if (SREC) studioTick(); if (!$('studio').hidden) { meterTick(); prompterTick(); }
@@ -1040,7 +1040,10 @@ const numOf = w => (/^\d+$/.test(w || '') ? +w : NUMW[w] || null);
 function vcParse(raw, isPlaying) {
   let s = ' ' + String(raw).toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim() + ' ';
   const wake = /^ (?:hey |ok |okay )?video /;
-  if (wake.test(s)) s = s.replace(wake, ' '); else if (isPlaying) return { ignored: true };
+  let tw;
+  if (wake.test(s)) s = s.replace(wake, ' ');
+  else if (isPlaying && (tw = s.match(/^ ((?:\w+ ){1,3})(?:the |this )video $/))) s = ' ' + tw[1];   // "pause the video"
+  else if (isPlaying) return { ignored: true };
   for (let k = 0; k < 2; k++) s = s.replace(/ (?:please|um|uh|okay|ok|now|just|the|can you|could you|would you|will you|hey|and|then|let's|lets) /g, ' ');
   s = s.replace(/full screen/g, 'fullscreen').replace(/\s+/g, ' ');
   let m;
@@ -1049,10 +1052,11 @@ function vcParse(raw, isPlaying) {
   if ((m = s.match(/\b(?:go to|jump to|goto)\s+(?:scene\s+)?(\w+)/) || s.match(/\bscene\s+(\w+)/))) { const n = numOf(m[1]); if (n) return { act: 'goto', arg: n }; }
   if ((m = s.match(/\bspeed\s+(\w+)/)) && m[1] !== 'up') { const n = numOf(m[1]); return n >= 1 && n <= 4 ? { act: 'speed', arg: n } : null; }
   if (/\b(normal|regular) speed\b/.test(s)) return { act: 'speed', arg: 1 };
-  if (/\b(restart|start over|begin again|from the (beginning|start))\b/.test(s)) return { act: 'restart' };
+  if (/\b(restart|start over|begin again|beginning|from (the )?start|to (the )?start)\b/.test(s)) return { act: 'restart' };
   if (/\b(repeat|replay|again)\b/.test(s)) return { act: 'repeat' };
   if (/\bunmute\b/.test(s)) return { act: 'unmute' };
   if (/\bmute\b/.test(s)) return { act: 'mute' };
+  if ((m = s.match(/\bvolume (?:to |at )?(\d{1,3})\b/))) return { act: 'volSet', arg: Math.min(100, +m[1]) / 100 };
   if (/\b(max|maximum|full) volume\b|\bvolume (max|maximum|full)\b|\bvolume to (max|full)\b/.test(s)) return { act: 'volMax' };
   if (/\bvolume (up|higher)\b|\blouder\b|\bturn (it )?up\b/.test(s)) return { act: 'volUp' };
   if (/\bvolume (down|lower)\b|\b(quieter|softer)\b|\bturn (it )?down\b|\blower volume\b/.test(s)) return { act: 'volDown' };
@@ -1082,6 +1086,7 @@ function vcRun(c) {
     case 'unmute': setMuted(false); return 'Unmute';
     case 'volUp': setVol(vol + 0.15); return `Volume ${Math.round(vol * 100)}%`;
     case 'volDown': setVol(vol - 0.15); return `Volume ${Math.round(vol * 100)}%`;
+    case 'volSet': setVol(c.arg); return `Volume ${Math.round(vol * 100)}%`;
     case 'volMax': setVol(1); return 'Volume 100%';
     case 'cc': setCC(c.arg === null ? !ccOn : c.arg); return `Captions ${ccOn ? 'on' : 'off'}`;
     case 'fs': { const el = $('stagewrap'); try { const p = c.arg ? (!document.fullscreenElement && el.requestFullscreen && el.requestFullscreen()) : (document.fullscreenElement && document.exitFullscreen()); if (p && p.catch) p.catch(() => toast('The browser needs a click before it allows fullscreen')); } catch (e) {} return c.arg ? 'Fullscreen' : 'Exit fullscreen'; }
@@ -1171,6 +1176,7 @@ document.addEventListener('keydown', e => {
   if (e.target.closest('input, select, textarea') || REC) { if (REC && e.key === 'Escape') cancelRec(); return; }
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const k = e.key.toLowerCase();
+  if (k === ' ' && e.target.closest && e.target.closest('button, a, summary')) return;   // Space activates the focused control
   if (k === ' ') { e.preventDefault(); setPlaying(!playing); }
   else if (k.length === 1 && '1234'.includes(k)) setSpeed(+k);
   else if (k === 'arrowright') seekTo(t + 5); else if (k === 'arrowleft') seekTo(t - 5);

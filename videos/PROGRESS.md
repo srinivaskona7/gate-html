@@ -1,6 +1,6 @@
 # GATE CS 2027 video progress
 
-**87 of 88 modules complete.** Regenerate with `python3 progress.py`.
+**88 of 88 modules complete.** Regenerate with `python3 progress.py`.
 
 | Section | Done | Next up |
 |---|---|---|
@@ -13,7 +13,7 @@
 | Compiler Design | 7/7 | - |
 | Operating System | 8/8 | - |
 | Databases | 6/6 | - |
-| Computer Networks | 8/9 | Principles of Layering |
+| Computer Networks | 9/9 | - |
 
 ## Engineering Mathematics
 
@@ -123,7 +123,7 @@
 
 ## Computer Networks
 
-- [ ] **Principles of Layering** (`layering`): OSI and TCP/IP, encapsulation and protocol responsibilities
+- [x] **Principles of Layering** (`layering`): OSI and TCP/IP, encapsulation and protocol responsibilities
 - [x] **Switching and Performance Metrics** (`switching-performance`): Circuit, packet, virtual circuit, delay and throughput
 - [x] **Error Detection** (`error-detection`): Parity, checksum and CRC
 - [x] **Medium Access Control and Ethernet** (`mac-ethernet`): ALOHA, CSMA/CD, efficiency and Ethernet framing
